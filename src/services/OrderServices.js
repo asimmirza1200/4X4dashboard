@@ -5,29 +5,38 @@ const OrderServices = {
     body,
     headers,
     customerName,
+    customer,
     status,
     page = 1,
-    limit = 8,
+    limit = 50,
     day,
-    // source,
     method,
     startDate,
     endDate,
-    // download = "",
+    origin,
+    search,
+    sortBy,
+    sortOrder,
+    includeTrashed,
   }) => {
-    const searchName = customerName !== null ? customerName : "";
-    const searchStatus = status !== null ? status : "";
-    const searchDay = day !== null ? day : "";
-    // const searchSource = source !== null ? source : "";
-    const searchMethod = method !== null ? method : "";
-    const startD = startDate !== null ? startDate : "";
-    const endD = endDate !== null ? endDate : "";
+    // Build query params
+    const params = new URLSearchParams();
+    if (page) params.append("page", page);
+    if (limit) params.append("limit", limit);
+    if (status) params.append("status", status);
+    if (customerName) params.append("customerName", customerName);
+    if (customer) params.append("customer", customer);
+    if (day) params.append("day", day);
+    if (method) params.append("method", method);
+    if (startDate) params.append("startDate", startDate);
+    if (endDate) params.append("endDate", endDate);
+    if (origin) params.append("origin", origin);
+    if (search) params.append("search", search);
+    if (sortBy) params.append("sortBy", sortBy);
+    if (sortOrder) params.append("sortOrder", sortOrder);
+    if (includeTrashed) params.append("includeTrashed", includeTrashed);
 
-    return requests.get(
-      `/orders?customerName=${searchName}&status=${searchStatus}&day=${searchDay}&page=${page}&limit=${limit}&startDate=${startD}&endDate=${endD}&method=${searchMethod}`,
-      body,
-      headers
-    );
+    return requests.get(`/orders?${params.toString()}`, body, headers);
   },
 
   getAllOrdersTwo: async ({ invoice, body, headers }) => {
@@ -48,6 +57,22 @@ const OrderServices = {
 
   getOrderCustomer: async (id, body) => {
     return requests.get(`/orders/customer/${id}`, body);
+  },
+
+  // OMS: Bulk update orders
+  bulkUpdateOrders: async (data, body, headers) => {
+    return requests.post(`/orders/bulk`, data, body, headers);
+  },
+
+  // OMS: Add note to order
+  addOrderNote: async (id, data, body, headers) => {
+    return requests.post(`/orders/${id}/notes`, data, body, headers);
+  },
+
+  // OMS: Export orders to CSV
+  exportOrders: async (params, body, headers) => {
+    const queryString = new URLSearchParams(params).toString();
+    return requests.get(`/orders/export?${queryString}`, body, headers);
   },
 
   getOrderById: async (id, body) => {

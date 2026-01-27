@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect, useMemo } from "react";
 import {
   Table,
   TableHeader,
@@ -16,12 +16,12 @@ import { useTranslation } from "react-i18next";
 import { FiPlus, FiChevronUp, FiChevronDown, FiDownload } from "react-icons/fi";
 import { FiEdit, FiTrash2 } from "react-icons/fi";
 import { toast } from "react-toastify";
+import exportFromJSON from "export-from-json";
 
 //internal import
 
 import useAsync from "@/hooks/useAsync";
 import useToggleDrawer from "@/hooks/useToggleDrawer";
-import UploadMany from "@/components/common/UploadMany";
 import NotFound from "@/components/table/NotFound";
 import ProductServices from "@/services/ProductServices";
 import PageTitle from "@/components/Typography/PageTitle";
@@ -63,31 +63,21 @@ const Products = () => {
     sortedField,
     setSortedField,
     limitData,
+    isUpdate,
     setIsUpdate,
     toggleBulkDrawer,
     windowDimension,
+    isDrawerOpen,
   } = useContext(SidebarContext);
 
   // Phase 7: Check if mobile view
   const isMobile = windowDimension <= 768;
 
-  // Phase 3: Status tabs and filters state with localStorage persistence
-  const [status, setStatus] = useState(() => {
-    const saved = localStorage.getItem("productFilters_status");
-    return saved || "all";
-  });
-  const [productType, setProductType] = useState(() => {
-    const saved = localStorage.getItem("productFilters_productType");
-    return saved || "";
-  });
-  const [stockStatus, setStockStatus] = useState(() => {
-    const saved = localStorage.getItem("productFilters_stockStatus");
-    return saved || "";
-  });
-  const [selectedBrand, setSelectedBrand] = useState(() => {
-    const saved = localStorage.getItem("productFilters_brand");
-    return saved || "";
-  });
+  // Phase 3: Status tabs and filters state - empty by default
+  const [status, setStatus] = useState("all");
+  const [productType, setProductType] = useState("");
+  const [stockStatus, setStockStatus] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState("");
   // Phase 6: SEO Rank filter (placeholder for Rank Math integration)
   const [seoRank, setSEORank] = useState("");
 
@@ -95,22 +85,14 @@ const Products = () => {
   const [sortBy, setSortBy] = useState('date'); // Default: date
   const [sortDir, setSortDir] = useState('desc'); // Default: descending
 
-  // Phase 3: Persist filters to localStorage
+  // Reset to page 1 when drawer closes after adding product (to see new product)
   useEffect(() => {
-    localStorage.setItem("productFilters_status", status);
-  }, [status]);
-
-  useEffect(() => {
-    localStorage.setItem("productFilters_productType", productType);
-  }, [productType]);
-
-  useEffect(() => {
-    localStorage.setItem("productFilters_stockStatus", stockStatus);
-  }, [stockStatus]);
-
-  useEffect(() => {
-    localStorage.setItem("productFilters_brand", selectedBrand);
-  }, [selectedBrand]);
+    if (!isDrawerOpen && isUpdate && currentPage !== 1) {
+      // Reset to first page to see the newly added product
+      handleChangePage(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDrawerOpen, isUpdate]);
 
   // Phase 3: Fetch status counts for tabs
   const { data: statusCounts } = useAsync(() =>
@@ -172,6 +154,7 @@ const Products = () => {
       productType,
       stockStatus,
       selectedBrand,
+      isUpdate, // Add isUpdate to trigger refetch when product is added/updated
     ]
   );
 
@@ -197,16 +180,11 @@ const Products = () => {
     setSortedField("");
     setSortBy('date');
     setSortDir('desc');
-    setStatus('all'); // Phase 3: Reset status
-    setProductType(""); // Phase 3: Reset product type
-    setStockStatus(""); // Phase 3: Reset stock status
-    setSelectedBrand(""); // Phase 3: Reset brand
+    setStatus('all');
+    setProductType("");
+    setStockStatus("");
+    setSelectedBrand("");
     searchRef.current.value = "";
-    // Clear localStorage on reset
-    localStorage.removeItem("productFilters_status");
-    localStorage.removeItem("productFilters_productType");
-    localStorage.removeItem("productFilters_stockStatus");
-    localStorage.removeItem("productFilters_brand");
   };
 
   // Handle column sorting
@@ -235,11 +213,17 @@ const Products = () => {
       : <FiChevronDown className="w-4 h-4 text-emerald-600" />;
   };
 
-  // Phase 6: Export to CSV state
-  const [loadingExport, setLoadingExport] = useState(false);
+  // Phase 6: Export state
+  const [loadingExport, setLoadingExport] = useState({
+    type: "",
+    status: false,
+  });
 
   // Phase 7: Mobile filters drawer state
   const [isFiltersDrawerOpen, setIsFiltersDrawerOpen] = useState(false);
+  
+  // Import section state
+  const [isImportBoxShown, setIsImportBoxShown] = useState(false);
 
   // console.log('productss',products)
   const {
@@ -250,49 +234,136 @@ const Products = () => {
     handleUploadMultiple,
     handleRemoveSelectFile,
   } = useProductFilter(data?.products || []);
-  
-  // Use serviceData if available, otherwise fallback to data?.products
-  const displayProducts = (serviceData && Array.isArray(serviceData) && serviceData.length > 0) 
-    ? serviceData 
-    : (data?.products && Array.isArray(data.products) ? data.products : []);
 
-  // Phase 6: Handle CSV Export
-  const handleExportCSV = async () => {
+  // Use serviceData if available, otherwise fallback to data?.products
+  const displayProducts = useMemo(() => {
+    if (serviceData && Array.isArray(serviceData) && serviceData.length > 0) {
+      return serviceData;
+    }
+    if (data?.products && Array.isArray(data.products)) {
+      return data.products;
+    }
+    return [];
+  }, [serviceData, data?.products]);
+
+  // Phase 6: Handle Export (CSV, JSON, Template)
+  const handleExport = async (exportType) => {
+    if (!data?.products || data.products.length === 0) {
+      toast.error(t("No products to export"));
+      return;
+    }
+
     try {
-      setLoadingExport(true);
-      const response = await ProductServices.exportProductsToCSV({
+      setLoadingExport({ type: exportType, status: true });
+
+      if (exportType === "template") {
+        // Download CSV Template
+        const templateData = [
+          {
+            "post_title": "Sample Product",
+            "post_name": "sample-product",
+            "post_content": "Product description",
+            "post_excerpt": "Short description",
+            "regular_price": "100.00",
+            "sale_price": "90.00",
+            "sku": "SKU001",
+            "stock_status": "instock",
+            "productId": "PROD001",
+            "manufacturerSku": "MFG001",
+            "internalSku": "INT001",
+            "tradePrice": "80.00",
+            "profitMarginDollar": "20.00",
+            "profitMarginPercentage": "25.00",
+            "quickDiscountDollar": "10.00",
+            "quickDiscountPercentage": "10.00",
+            "additionalProductDetails": "Additional details",
+            "tax:product_cat": "Category Name",
+            "tax:product_tag": "tag1|tag2|tag3",
+            "weight": "1.5",
+            "length": "10",
+            "width": "5",
+            "height": "3"
+          }
+        ];
+
+        exportFromJSON({
+          data: templateData,
+          fileName: "product-import-template",
+          exportType: exportFromJSON.types.csv,
+        });
+        toast.success(t("Template downloaded successfully"));
+        setLoadingExport({ type: "", status: false });
+        return;
+      }
+
+      // For CSV and JSON, get all products with current filters
+      const response = await ProductServices.getAllProducts({
+        page: 1,
+        limit: data?.totalDoc || 10000,
+        category: category || null,
+        title: searchText || null,
+        price: 0,
         search: searchText,
-        status: status,
-        category: category,
-        product_type: productType,
-        stock_status: stockStatus,
-        brand: selectedBrand,
+        status: status === "all" ? undefined : status,
+        product_type: productType || undefined,
+        stock_status: stockStatus || undefined,
+        brand: selectedBrand || undefined,
         sort_by: sortBy,
         sort_dir: sortDir,
       });
 
-      // Create blob and download
-      const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
+      const products = response.products || [];
 
-      // Generate filename with timestamp
-      const now = new Date();
-      const dateStr = now.toISOString().split('T')[0].replace(/-/g, '');
-      const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '');
-      link.setAttribute('download', `products_export_${dateStr}_${timeStr}.csv`);
+      if (exportType === "csv") {
+        // Use backend CSV export if available, otherwise use client-side
+        try {
+          const csvResponse = await ProductServices.exportProductsToCSV({
+            search: searchText,
+            status: status,
+            category: category,
+            product_type: productType,
+            stock_status: stockStatus,
+            brand: selectedBrand,
+            sort_by: sortBy,
+            sort_dir: sortDir,
+          });
 
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+          const blob = new Blob([csvResponse.data], { type: 'text/csv;charset=utf-8;' });
+          const link = document.createElement('a');
+          const url = URL.createObjectURL(blob);
+          link.setAttribute('href', url);
 
-      toast.success(t("Products exported successfully"));
+          const now = new Date();
+          const dateStr = now.toISOString().split('T')[0].replace(/-/g, '');
+          const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '');
+          link.setAttribute('download', `products_export_${dateStr}_${timeStr}.csv`);
+
+          link.style.visibility = 'hidden';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } catch (csvError) {
+          // Fallback to client-side export
+          exportFromJSON({
+            data: products,
+            fileName: "products",
+            exportType: exportFromJSON.types.csv,
+          });
+        }
+        toast.success(t("Products exported to CSV successfully"));
+      } else if (exportType === "json") {
+        exportFromJSON({
+          data: products,
+          fileName: "products",
+          exportType: exportFromJSON.types.json,
+        });
+        toast.success(t("Products exported to JSON successfully"));
+      }
+
+      setLoadingExport({ type: "", status: false });
     } catch (error) {
       toast.error(error.message || t("Failed to export products"));
-    } finally {
-      setLoadingExport(false);
+      setLoadingExport({ type: "", status: false });
     }
   };
 
@@ -385,15 +456,56 @@ const Products = () => {
               className="py-3 md:pb-0 grid gap-4 lg:gap-6 xl:gap-6 xl:flex"
             >
               <div className="flex-grow-0 sm:flex-grow md:flex-grow lg:flex-grow xl:flex-grow">
-                <UploadMany
-                  title="Products"
-                  filename={filename}
-                  isDisabled={isDisabled}
-                  totalDoc={data?.totalDoc}
-                  handleSelectFile={handleSelectFile}
-                  handleUploadMultiple={handleUploadMultiple}
-                  handleRemoveSelectFile={handleRemoveSelectFile}
-                />
+                {/* Import functionality only - export removed */}
+                <div className="flex flex-col">
+                  <button
+                    onClick={() => setIsImportBoxShown(!isImportBoxShown)}
+                    className="border flex justify-center items-center h-10 w-20 hover:text-yellow-400 border-gray-300 dark:text-gray-300 cursor-pointer py-2 hover:border-yellow-400 rounded-md focus:outline-none"
+                  >
+                    <FiDownload className="mr-2" />
+                    <span className="text-xs">{t("Import")}</span>
+                  </button>
+                  {/* Import box */}
+                  {isImportBoxShown && (
+                    <div className="w-full my-2 lg:my-0 md:my-0 flex flex-col sm:flex-row gap-2">
+                      <div className="h-10 border border-dashed border-emerald-500 rounded-md flex-1">
+                        <label htmlFor="import-file-input" className="w-full rounded-lg h-10 flex justify-center items-center text-xs dark:text-gray-400 leading-none cursor-pointer">
+                          <Input
+                            disabled={isDisabled}
+                            type="file"
+                            accept=".csv,.xls,.json"
+                            onChange={handleSelectFile}
+                            className="hidden"
+                            id="import-file-input"
+                          />
+                          {filename ? (
+                            <span className="px-2">{filename}</span>
+                          ) : (
+                            <span className="mx-2 text-emerald-500 text-lg dark:text-gray-400">
+                              {t("SelectYourJSON/CSV")} {t("File")}
+                            </span>
+                          )}
+                        </label>
+                      </div>
+                      {filename && (
+                        <button
+                          onClick={handleRemoveSelectFile}
+                          className="text-red-500 hover:text-red-700 text-lg px-2"
+                          type="button"
+                        >
+                          ×
+                        </button>
+                      )}
+                      <Button
+                        onClick={handleUploadMultiple}
+                        className="h-10 px-4"
+                        disabled={isDisabled || !filename}
+                      >
+                        <span className="text-xs">{t("ImportNow")}</span>
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex flex-col sm:flex-row gap-4">
                 {/* Phase 5: Bulk Actions Dropdown */}
@@ -409,18 +521,42 @@ const Products = () => {
                     }}
                   />
                 </div>
-                {/* Phase 6: Export to CSV Button - Hidden on mobile */}
-                <div className="hidden sm:block flex-grow-0 md:flex-grow lg:flex-grow xl:flex-grow">
-                  <Button
-                    onClick={handleExportCSV}
-                    disabled={loadingExport || !data?.products || data?.products.length === 0}
-                    className="w-full rounded-md h-12 min-h-[48px] bg-emerald-600 hover:bg-emerald-700 touch-manipulation"
+                {/* Phase 6: Export Dropdown - CSV, JSON, Template */}
+                <div className="flex-grow-0 md:flex-grow lg:flex-grow xl:flex-grow">
+                  <select
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value) {
+                        handleExport(value);
+                        e.target.value = ""; // Reset to default
+                      }
+                    }}
+                    disabled={loadingExport.status || !data?.products || data?.products.length === 0}
+                    defaultValue=""
+                    className="w-full min-h-[48px] px-4 pr-10 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
+                      backgroundPosition: 'right 0.5rem center',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundSize: '1.5em 1.5em',
+                      paddingRight: '2.5rem',
+                    }}
                   >
-                    <span className="mr-2">
-                      <FiDownload />
-                    </span>
-                    {loadingExport ? t("Exporting...") : t("Export to CSV")}
-                  </Button>
+                    <option value="" disabled>
+                      {loadingExport.status
+                        ? `${t("Exporting")}...`
+                        : t("Export")}
+                    </option>
+                    <option value="csv">
+                      {t("Export to CSV")}
+                    </option>
+                    <option value="json">
+                      {t("Export to JSON")}
+                    </option>
+                    <option value="template">
+                      {t("Download CSV Template")}
+                    </option>
+                  </select>
                 </div>
                 <div className="flex-grow-0 md:flex-grow lg:flex-grow xl:flex-grow">
                   <Button
@@ -494,7 +630,7 @@ const Products = () => {
               </div>
 
               <div className="flex-grow-0 md:flex-grow lg:flex-grow xl:flex-grow">
-                <Select 
+                <Select
                   value={sortedField || "All"}
                   onChange={(e) => {
                     const value = e.target.value;

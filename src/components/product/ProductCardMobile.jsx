@@ -171,7 +171,17 @@ const ProductCardMobile = ({
                             )}
                             {product.brand?.name && (
                                 <span>
-                                    <strong>Brand:</strong> {product.brand.name}
+                                    <strong>Brand:</strong>{" "}
+                                    {product.brand._id ? (
+                                        <Link
+                                            to={`/brands/${product.brand._id}`}
+                                            className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 hover:underline"
+                                        >
+                                            {product.brand.name}
+                                        </Link>
+                                    ) : (
+                                        product.brand.name
+                                    )}
                                 </span>
                             )}
                         </div>

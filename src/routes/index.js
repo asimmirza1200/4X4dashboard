@@ -15,6 +15,7 @@ const Orders = lazy(() => import("@/pages/Orders"));
 const OrderInvoice = lazy(() => import("@/pages/OrderInvoice"));
 const Coupons = lazy(() => import("@/pages/Coupons"));
 const Brands = lazy(() => import("@/pages/Brands"));
+const BrandDetail = lazy(() => import("@/pages/BrandDetail"));
 const Reviews = lazy(() => import("@/pages/Reviews"));
 
 // const Setting = lazy(() => import("@/pages/Setting"));
@@ -28,7 +29,12 @@ const StoreHome = lazy(() => import("@/pages/StoreHome"));
 const StoreSetting = lazy(() => import("@/pages/StoreSetting"));
 const Notifications = lazy(() => import("@/pages/Notifications"));
 const SEO = lazy(() => import("@/pages/Seo"));
-const Blog = lazy(() => import("@/pages/Blogs"))
+const Blog = lazy(() => import("@/pages/Blogs"));
+const CBSGBuilds = lazy(() => import("@/pages/CBSGBuilds"));
+const CBSGBuildDetail = lazy(() => import("@/pages/CBSGBuildDetail"));
+const CBSGUsers = lazy(() => import("@/pages/CBSGUsers"));
+const CBSGModeration = lazy(() => import("@/pages/CBSGModeration"));
+const CBSGSettings = lazy(() => import("@/pages/CBSGSettings"));
 /*
 //  * ⚠ These are internal routes!
 //  * They will be rendered inside the app, using the default `containers/Layout`.
@@ -115,6 +121,10 @@ const routes = [
     component: Brands,
   },
   {
+    path: "/brands/:id",
+    component: BrandDetail,
+  },
+  {
     path: "/reviews",
     component: Reviews,
   },
@@ -142,6 +152,27 @@ const routes = [
   {
     path: "/notifications",
     component: Notifications,
+  },
+  // CBSG Routes
+  {
+    path: "/cbsg/builds",
+    component: CBSGBuilds,
+  },
+  {
+    path: "/cbsg/builds/:id",
+    component: CBSGBuildDetail,
+  },
+  {
+    path: "/cbsg/users",
+    component: CBSGUsers,
+  },
+  {
+    path: "/cbsg/moderation",
+    component: CBSGModeration,
+  },
+  {
+    path: "/cbsg/settings",
+    component: CBSGSettings,
   },
 ];
 

@@ -24,11 +24,33 @@ const useUtilsFunction = () => {
   };
 
   const showDateFormat = (data) => {
-    return dayjs(data).format(globalSetting?.default_date_format);
+    if (!data) return "N/A";
+    try {
+      const dateFormat = globalSetting?.default_date_format || "MM/DD/YYYY";
+      return dayjs(data).format(dateFormat);
+    } catch (error) {
+      // Fallback to default format if dayjs fails
+      try {
+        return dayjs(data).format("MM/DD/YYYY");
+      } catch (e) {
+        return "Invalid Date";
+      }
+    }
   };
 
   const showDateTimeFormat = (data) => {
-    return dayjs(data).format(`${globalSetting?.default_date_format}  h:mm A`);
+    if (!data) return "N/A";
+    try {
+      const dateFormat = globalSetting?.default_date_format || "MM/DD/YYYY";
+      return dayjs(data).format(`${dateFormat}  h:mm A`);
+    } catch (error) {
+      // Fallback to default format if dayjs fails
+      try {
+        return dayjs(data).format("MM/DD/YYYY h:mm A");
+      } catch (e) {
+        return "Invalid Date";
+      }
+    }
   };
 
   //for formatting number

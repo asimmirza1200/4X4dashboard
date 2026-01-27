@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { t } from "i18next";
 import axios from "axios";
+import Cookies from "js-cookie";
 import { useDropzone } from "react-dropzone";
 // import cloudinary from "cloudinary/lib/cloudinary";
 import { DndProvider } from "react-dnd";
@@ -43,7 +44,7 @@ const Uploader = ({ setImageUrl, imageUrl, product, folder }) => {
       const invalidFiles = rejectedFiles.filter(
         (file) => !validTypes.includes(file.file.type)
       );
-      
+
       if (invalidFiles.length > 0) {
         notifyError("Only .jpeg, .jpg, .png, and .webp image formats are allowed!");
       }
@@ -105,33 +106,54 @@ const Uploader = ({ setImageUrl, imageUrl, product, folder }) => {
         const formData = new FormData();
         formData.append('images', file);
 
+        // Get auth token from cookies
+        let adminInfo;
+        if (Cookies.get("adminInfo")) {
+          adminInfo = JSON.parse(Cookies.get("adminInfo"));
+        }
 
+        const baseURL = import.meta.env.VITE_APP_API_BASE_URL || 'http://localhost:5055/api';
 
-        const username = import.meta.env.VITE_USER_NAME;
-        const password = import.meta.env.VITE_PASSWORD;
-        const credentials = btoa(`${username}:${password}`);
         axios({
-          url: import.meta.env.VITE_IMAGES_SERVER + '/upload',
+          // backend: app.use("/api/upload", uploadRoutes);
+          // if baseURL already includes /api, just append /upload/images
+          url: `${baseURL}/upload/images`,
           method: "POST",
           headers: {
             'Content-Type': 'multipart/form-data',
-            Authorization: `Basic ${credentials}`
+            Authorization: adminInfo ? `Bearer ${adminInfo.token}` : null,
           },
           data: formData,
         })
           .then((res) => {
             notifySuccess("Image Uploaded successfully!");
             setLoading(false);
+            setError("");
+            
+            // Clear the files state after successful upload
+            setFiles((prevFiles) => prevFiles.filter((f) => f !== file));
+            
             if (product) {
-              setImageUrl((imgUrl) => [...imgUrl, `${import.meta.env.VITE_IMAGES_SERVER}/images/${res?.data?.files[0]?.filename}`]);
+              // For products, add the URL to the array
+              const uploadedUrl = res?.data?.files?.[0]?.url || res?.data?.url;
+              if (uploadedUrl) {
+                setImageUrl((imgUrl) => [...(imgUrl || []), uploadedUrl]);
+              }
             } else {
-              setImageUrl(`${import.meta.env.VITE_IMAGES_SERVER}/images/${res?.data?.files[0]?.filename}`);
+              // For single image, set the URL directly
+              const uploadedUrl = res?.data?.files?.[0]?.url || res?.data?.url;
+              if (uploadedUrl) {
+                setImageUrl(uploadedUrl);
+              }
             }
           })
           .catch((err) => {
             console.error("err", err);
-            notifyError(err.Message);
+            notifyError(err.response?.data?.message || err.message || "Image upload failed");
             setLoading(false);
+            setError("");
+            // Remove failed file from preview
+            setFiles((prevFiles) => prevFiles.filter((f) => f !== file));
           });
       });
     }

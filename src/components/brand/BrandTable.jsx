@@ -1,127 +1,124 @@
 import {
-    Avatar,
-    Badge,
-    TableBody,
-    TableCell,
-    TableRow,
+  Avatar,
+  Badge,
+  TableBody,
+  TableCell,
+  TableRow,
 } from "@windmill/react-ui";
-import { useEffect, useState } from "react";
+import { t } from "i18next";
+import { FiEdit, FiTrash2, FiEye } from "react-icons/fi";
+import dayjs from "dayjs";
+import React from "react";
 
-// Internal imports
-import useUtilsFunction from "@/hooks/useUtilsFunction";
+//internal import
 import CheckBox from "@/components/form/others/CheckBox";
-import useToggleDrawer from "@/hooks/useToggleDrawer";
-import DeleteModal from "@/components/modal/DeleteModal";
-import MainDrawer from "@/components/drawer/MainDrawer";
-import BrandDrawer from "@/components/drawer/BrandsDrawer"; // Updated drawer for brands
-import ShowHideButton from "@/components/table/ShowHideButton";
-import EditDeleteButton from "@/components/table/EditDeleteButton";
+import SwitchToggle from "@/components/form/switch/SwitchToggle";
 
-const BrandTable = ({ isCheck, brands, setIsCheck }) => {
-    const [updatedBrands, setUpdatedBrands] = useState([]);
+const BrandTable = ({
+  brands,
+  isCheck,
+  setIsCheck,
+  handleToggleVisibility,
+  handleViewBrand,
+  handleEditBrand,
+  handleDelete,
+}) => {
+  const handleClick = (e) => {
+    const { id, checked } = e.target;
+    setIsCheck([...isCheck, id]);
+    if (!checked) {
+      setIsCheck(isCheck.filter((item) => item !== id));
+    }
+  };
 
-    const { title, serviceId, handleModalOpen, handleUpdate } = useToggleDrawer();
+  return (
+    <TableBody>
+      {brands?.map((brand) => (
+        <TableRow key={brand._id}>
+          <TableCell className="w-12">
+            <CheckBox
+              type="checkbox"
+              name={brand._id}
+              id={brand._id}
+              handleClick={handleClick}
+              isChecked={isCheck.includes(brand._id)}
+            />
+          </TableCell>
 
-    const { currency, showDateFormat, globalSetting, showingTranslateValue } =
-        useUtilsFunction();
+          {/* Logo */}
+          <TableCell>
+            <Avatar
+              className="hidden mr-3 md:block"
+              src={brand.logo_url || brand.image || ""}
+              alt={brand.name}
+              size="large"
+            />
+          </TableCell>
 
-    const handleClick = (e) => {
-        const { id, checked } = e.target;
-        setIsCheck([...isCheck, id]);
-        if (!checked) {
-            setIsCheck(isCheck.filter((item) => item !== id));
-        }
-    };
+          {/* Brand Name */}
+          <TableCell>
+            <div className="flex items-center">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-400">
+                {brand.name}
+              </span>
+            </div>
+          </TableCell>
 
-    useEffect(() => {
-        const result = brands?.map((el) => {
-            const newDate = new Date(el?.updatedAt).toLocaleString("en-US", {
-                timeZone: globalSetting?.default_time_zone,
-            });
-            const newObj = {
-                ...el,
-                updatedDate: newDate,
-            };
-            return newObj;
-        });
-        setUpdatedBrands(result);
-    }, [brands, globalSetting?.default_time_zone]);
+          {/* Product Count */}
+          <TableCell>
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              {brand.productCount || 0}
+            </span>
+          </TableCell>
 
-    return (
-        <>
-            {isCheck.length < 1 && <DeleteModal id={serviceId} title={title} />}
+          {/* Status */}
+          <TableCell className="text-center">
+            <SwitchToggle
+              id={brand._id}
+              processOption={brand.is_active !== false}
+              handleProcess={() =>
+                handleToggleVisibility(brand._id, brand.is_active !== false)
+              }
+            />
+          </TableCell>
 
-            {isCheck.length < 2 && (
-                <MainDrawer>
-                    <BrandDrawer id={serviceId} />
-                </MainDrawer>
-            )}
+          {/* Date */}
+          <TableCell>
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              {dayjs(brand.updatedAt).format("MMM DD, YYYY")}
+            </span>
+          </TableCell>
 
-            <TableBody>
-                {updatedBrands?.map((brand, i) => (
-                    <TableRow key={i + 1}>
-                        <TableCell>
-                            <CheckBox
-                                type="checkbox"
-                                name={brand?.name}
-                                id={brand._id}
-                                handleClick={handleClick}
-                                isChecked={isCheck?.includes(brand._id)}
-                            />
-                        </TableCell>
-
-                        <TableCell>
-                            <div className="flex items-center">
-                                {brand?.image ? (
-                                    <Avatar
-                                        className="hidden p-1 mr-2 md:block bg-gray-50 shadow-none"
-                                        src={brand?.image}
-                                        alt="brand"
-                                    />
-                                ) : (
-                                    <Avatar
-                                        src={`https://res.cloudinary.com/ahossain/image/upload/v1655097002/placeholder_kvepfp.png`}
-                                        alt="brand"
-                                    />
-                                )}
-
-                            </div>
-                        </TableCell>
-                        <TableCell>
-                            <span className="text-sm">{brand?.name}</span>
-                        </TableCell>
-                        <TableCell>
-                            <span className="text-sm">{brand?.slug}</span>
-                        </TableCell>
-
-                        {brand?.country && (
-                            <TableCell>
-                                <span className="text-sm">{brand?.country}</span>
-                            </TableCell>
-                        )}
-
-                        <TableCell className="text-center">
-                            <ShowHideButton id={brand._id} status={brand.isPublished} />
-                        </TableCell>
-
-
-
-
-
-                        <TableCell>
-                            <EditDeleteButton
-                                id={brand?._id}
-                                isCheck={isCheck}
-                                handleUpdate={handleUpdate}
-                                handleModalOpen={handleModalOpen}
-                                title={brand?.name}
-                            />
-                        </TableCell>
-                    </TableRow>
-                ))}
-            </TableBody>
-        </>
-    );
+          {/* Actions */}
+          <TableCell className="text-right">
+            <div className="flex justify-end items-center space-x-2">
+              <button
+                onClick={() => handleViewBrand(brand._id)}
+                className="text-gray-600 hover:text-emerald-600 dark:text-gray-400 dark:hover:text-emerald-400"
+                title={t("View Details")}
+              >
+                <FiEye className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => handleEditBrand(brand._id)}
+                className="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400"
+                title={t("Edit")}
+              >
+                <FiEdit className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => handleDelete(brand._id)}
+                className="text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
+                title={t("Delete")}
+              >
+                <FiTrash2 className="w-5 h-5" />
+              </button>
+            </div>
+          </TableCell>
+        </TableRow>
+      ))}
+    </TableBody>
+  );
 };
 
 export default BrandTable;

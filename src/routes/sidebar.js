@@ -6,8 +6,10 @@ import {
   FiSettings,
   FiSlack,
   FiActivity,
-  FiRss
-
+  FiRss,
+  FiTool,
+  FiShield,
+  FiList
 } from "react-icons/fi";
 
 /**
@@ -80,6 +82,29 @@ const sidebar = [
     path:"/blogs",
     icon:FiRss,
     name:"Blogs"
+  },
+
+  {
+    icon: FiTool,
+    name: "CBSG",
+    routes: [
+      {
+        path: "/cbsg/builds",
+        name: "Builds",
+      },
+      {
+        path: "/cbsg/users",
+        name: "Users",
+      },
+      {
+        path: "/cbsg/moderation",
+        name: "Moderation",
+      },
+      {
+        path: "/cbsg/settings",
+        name: "CBSG Settings",
+      },
+    ],
   },
 
   {

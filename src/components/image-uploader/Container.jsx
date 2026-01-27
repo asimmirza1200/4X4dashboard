@@ -20,20 +20,31 @@ const Container = ({ setImageUrl, imageUrl, handleRemoveImage }) => {
 
   const renderCard = useCallback(
     (card, i) => {
+      // Handle both URL strings and objects
+      // If card is a string (URL), use it directly; otherwise extract image property
+      const imageSrc = typeof card === 'string' ? card : (card?.image || card);
+      const cardId = typeof card === 'object' && card.id ? card.id : i;
+      
       return (
         <Card
-          key={i + 1}
+          key={cardId || i}
           index={i}
-          id={card.id}
-          text={card.text}
+          id={cardId}
+          text={typeof card === 'object' ? card.text : ''}
           moveCard={moveCard}
-          image={card}
+          image={imageSrc}
           handleRemoveImage={handleRemoveImage}
         />
       );
     },
     [moveCard, handleRemoveImage]
   );
+  
+  // Ensure imageUrl is an array before mapping
+  if (!imageUrl || !Array.isArray(imageUrl) || imageUrl.length === 0) {
+    return null;
+  }
+  
   return <>{imageUrl.map((card, i) => renderCard(card, i))}</>;
 };
 

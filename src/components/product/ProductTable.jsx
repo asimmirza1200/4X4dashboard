@@ -306,9 +306,19 @@ const ProductTable = ({ products, isCheck, setIsCheck }) => {
 
               {/* Brands */}
               <TableCell className="w-32 min-w-[100px] max-w-[120px]">
-                <span className="text-sm text-gray-600 dark:text-gray-400 truncate block" title={product.brand?.name || '—'}>
-                  {product.brand?.name || '—'}
-                </span>
+                {product.brand?._id ? (
+                  <Link
+                    to={`/brands/${product.brand._id}`}
+                    className="text-sm text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 truncate block hover:underline"
+                    title={product.brand.name}
+                  >
+                    {product.brand.name}
+                  </Link>
+                ) : (
+                  <span className="text-sm text-gray-600 dark:text-gray-400 truncate block" title="—">
+                    —
+                  </span>
+                )}
               </TableCell>
 
               {/* Phase 6: Statistics */}
