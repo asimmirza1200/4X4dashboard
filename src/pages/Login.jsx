@@ -80,7 +80,7 @@ const Login = () => {
                     <Button
                       disabled={loading}
                       type="submit"
-                      className="mt-4 h-12 w-full"
+                      className="mt-4 h-12 w-full bg-red-600 hover:bg-red-700"
                       to="/dashboard"
                     >
                       {t("LoginTitle")}

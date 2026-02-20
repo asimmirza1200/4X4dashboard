@@ -47,7 +47,7 @@ const SidebarSubMenu = ({ route }) => {
                   >
                     <Route path={child.path} exact={child.exact}>
                       <span
-                        className="absolute inset-y-0 left-0 w-1 bg-emerald-500 rounded-tr-lg rounded-br-lg"
+                        className="absolute inset-y-0 left-0 w-1 bg-red-600 rounded-tr-lg rounded-br-lg"
                         aria-hidden="true"
                       ></span>
                     </Route>
@@ -72,7 +72,7 @@ const SidebarSubMenu = ({ route }) => {
                   >
                     <Route path={child.path} exact={route.exact}>
                       <span
-                        className="absolute inset-y-0 left-0 w-1 bg-emerald-600 rounded-tr-lg rounded-br-lg"
+                        className="absolute inset-y-0 left-0 w-1 bg-red-600 rounded-tr-lg rounded-br-lg"
                         aria-hidden="true"
                       ></span>
                     </Route>
