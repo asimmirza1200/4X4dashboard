@@ -79,9 +79,14 @@ const sidebar = [
     name: "Seo Management",
   },
   {
-    path:"/blogs",
-    icon:FiRss,
-    name:"Blogs"
+    path: "/blogs",
+    icon: FiRss,
+    name: "Blogs",
+  },
+  {
+    path: "/pages",
+    icon: FiList,
+    name: "Pages",
   },
 
   {

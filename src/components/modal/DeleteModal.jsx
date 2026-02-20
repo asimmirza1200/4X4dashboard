@@ -22,6 +22,7 @@ import CurrencyServices from "@/services/CurrencyServices";
 import { notifyError, notifySuccess } from "@/utils/toast";
 import ReviewServices from "@/services/ReviewServices";
 import BlogServices from "@/services/BlogServices";
+import PageServices from "@/services/PageServices";
 
 const DeleteModal = ({ id, ids, setIsCheck, category, title, useParamId }) => {
   const { isModalOpen, closeModal, setIsUpdate } = useContext(SidebarContext);
@@ -97,17 +98,30 @@ const DeleteModal = ({ id, ids, setIsCheck, category, title, useParamId }) => {
       }
       if (location.pathname === "/blogs") {
         if (ids) {
-          // const res = await BrandsServices.deleteManyCoupons({
-          //   ids: ids,
-          // });
-          // setIsUpdate(true);
-          // notifySuccess(res.message);
-          // setIsCheck([]);
-          // setServiceId();
-          // closeModal();
-          // setIsSubmitting(false);
+          // bulk delete not implemented for blogs
         } else {
-          const res = await BlogServices.deleteBlog(id)
+          const res = await BlogServices.deleteBlog(id);
+          setIsUpdate(true);
+          notifySuccess(res.message);
+          setServiceId();
+          closeModal();
+          setIsSubmitting(false);
+        }
+      }
+
+      if (location.pathname === "/pages") {
+        if (ids?.length > 0) {
+          for (const pageId of ids) {
+            await PageServices.deletePage(pageId);
+          }
+          setIsUpdate(true);
+          notifySuccess("Pages deleted.");
+          setIsCheck([]);
+          setServiceId();
+          closeModal();
+          setIsSubmitting(false);
+        } else {
+          const res = await PageServices.deletePage(id);
           setIsUpdate(true);
           notifySuccess(res.message);
           setServiceId();

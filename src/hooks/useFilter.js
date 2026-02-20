@@ -275,6 +275,14 @@ const useFilter = (data) => {
             .includes(searchCoupon?.toLowerCase())
       );
     }
+    // Pages filtering (title/slug are strings)
+    if (location.pathname === "/pages" && searchCoupon) {
+      services = services?.filter(
+        (s) =>
+          s?.title?.toLowerCase().includes(searchCoupon?.toLowerCase()) ||
+          s?.slug?.toLowerCase().includes(searchCoupon?.toLowerCase())
+      );
+    }
     // order filtering
     if (status) {
       services = services.filter((order) => order.status === status);

@@ -20,6 +20,9 @@ import Container from "@/components/image-uploader/Container";
 //   api_secret: import.meta.env.VITE_APP_CLOUDINARY_API_SECRET,
 // });
 
+// Max image size: 500 KB (user requirement for banner/page images)
+const MAX_IMAGE_SIZE_BYTES = 500 * 1024; // 512000
+
 const Uploader = ({ setImageUrl, imageUrl, product, folder }) => {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -36,7 +39,7 @@ const Uploader = ({ setImageUrl, imageUrl, product, folder }) => {
       "image/webp": [".webp"],
     },
     multiple: product ? true : false,
-    maxSize: 500000,
+    maxSize: MAX_IMAGE_SIZE_BYTES,
     maxFiles: globalSetting?.number_of_image_per_product || 2,
     onDrop: (acceptedFiles, rejectedFiles) => {
       // Validate file types explicitly
@@ -71,7 +74,11 @@ const Uploader = ({ setImageUrl, imageUrl, product, folder }) => {
                   ? notifyError(
                     `Maximum ${globalSetting?.number_of_image_per_product} Image Can be Upload!`
                   )
-                  : notifyError(e.message)}
+                  : notifyError(
+                    e.code === "file-too-large"
+                      ? `File is too large. Maximum size is 500 KB.`
+                      : e.message
+                  )}
               </li>
             ))}
           </ul>
@@ -213,7 +220,7 @@ const Uploader = ({ setImageUrl, imageUrl, product, folder }) => {
           <FiUploadCloud className="text-3xl text-emerald-500" />
         </span>
         <p className="text-sm mt-2">{t("DragYourImage")}</p>
-        <em className="text-xs text-gray-400">Only .jpeg, .jpg, .png, and .webp formats allowed</em>
+        <em className="text-xs text-gray-400">Only .jpeg, .jpg, .png, and .webp. Max 500 KB per image.</em>
       </div>
 
       <div className="text-emerald-500">{loading && err}</div>

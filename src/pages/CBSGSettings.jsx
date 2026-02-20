@@ -24,12 +24,14 @@ const CBSGSettings = () => {
 
   const [enabled, setEnabled] = useState(data?.enabled ?? true);
   const [mode, setMode] = useState(data?.mode ?? "live");
+  const [buildsEnabled, setBuildsEnabled] = useState(data?.builds_enabled !== false);
 
   // Update settings when data loads
   React.useEffect(() => {
     if (data) {
       setEnabled(data.enabled);
       setMode(data.mode);
+      setBuildsEnabled(data.builds_enabled !== false);
     }
   }, [data]);
 
@@ -40,6 +42,7 @@ const CBSGSettings = () => {
       await CBSGServices.updateCBSGSettings({
         enabled,
         mode,
+        builds_enabled: buildsEnabled,
       });
       toast.success("CBSG settings updated successfully");
     } catch (error) {
@@ -100,6 +103,25 @@ const CBSGSettings = () => {
                   </Select>
                   <p className="mt-2 text-sm text-gray-500">
                     Enable or disable the CBSG system entirely.
+                  </p>
+                </div>
+
+                <div>
+                  <Label>
+                    <span className="text-gray-700 dark:text-gray-300">
+                      Show builds on website
+                    </span>
+                  </Label>
+                  <Select
+                    className="mt-1"
+                    value={buildsEnabled ? "true" : "false"}
+                    onChange={(e) => setBuildsEnabled(e.target.value === "true")}
+                  >
+                    <option value="true">On – Builds and Add My Build visible</option>
+                    <option value="false">Off – Hide builds module and links</option>
+                  </Select>
+                  <p className="mt-2 text-sm text-gray-500">
+                    When on, the Builds menu, Add My Build link, and build creation are shown on the storefront. When off, they are hidden.
                   </p>
                 </div>
 

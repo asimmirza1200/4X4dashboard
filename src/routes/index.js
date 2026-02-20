@@ -30,6 +30,7 @@ const StoreSetting = lazy(() => import("@/pages/StoreSetting"));
 const Notifications = lazy(() => import("@/pages/Notifications"));
 const SEO = lazy(() => import("@/pages/Seo"));
 const Blog = lazy(() => import("@/pages/Blogs"));
+const Pages = lazy(() => import("@/pages/Pages"));
 const CBSGBuilds = lazy(() => import("@/pages/CBSGBuilds"));
 const CBSGBuildDetail = lazy(() => import("@/pages/CBSGBuildDetail"));
 const CBSGUsers = lazy(() => import("@/pages/CBSGUsers"));
@@ -72,8 +73,12 @@ const routes = [
     component: ProductDetails,
   },
   {
-    path:"/blogs",
-       component: Blog,
+    path: "/blogs",
+    component: Blog,
+  },
+  {
+    path: "/pages",
+    component: Pages,
   },
   {
     path: "/categories",

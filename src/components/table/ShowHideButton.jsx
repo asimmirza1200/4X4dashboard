@@ -13,6 +13,7 @@ import ProductServices from "@/services/ProductServices";
 import { notifyError, notifySuccess } from "@/utils/toast";
 import ReviewServices from "@/services/ReviewServices";
 import BlogServices from "@/services/BlogServices";
+import PageServices from "@/services/PageServices";
 
 const ShowHideButton = ({ id, status, category, currencyStatusName }) => {
   const location = useLocation();
@@ -35,9 +36,16 @@ const ShowHideButton = ({ id, status, category, currencyStatusName }) => {
         setIsUpdate(true);
         notifySuccess(res.message);
       }
-      if (location.pathname === "/blogs" ) {
+      if (location.pathname === "/blogs") {
         const res = await BlogServices.updateBlog(id, {
-          status: newStatus === 'hide' ? 'Draft' : 'Published',
+          status: newStatus === "hide" ? "Draft" : "Published",
+        });
+        setIsUpdate(true);
+        notifySuccess(res.message);
+      }
+      if (location.pathname === "/pages") {
+        const res = await PageServices.updatePage(id, {
+          status: newStatus === "hide" ? "Draft" : "Published",
         });
         setIsUpdate(true);
         notifySuccess(res.message);
