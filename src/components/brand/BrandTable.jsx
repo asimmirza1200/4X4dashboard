@@ -13,6 +13,7 @@ import React from "react";
 //internal import
 import CheckBox from "@/components/form/others/CheckBox";
 import SwitchToggle from "@/components/form/switch/SwitchToggle";
+import { getImageUrl } from "@/utils/getImageUrl";
 
 const BrandTable = ({
   brands,
@@ -49,7 +50,7 @@ const BrandTable = ({
           <TableCell>
             <Avatar
               className="hidden mr-3 md:block"
-              src={brand.logo_url || brand.image || ""}
+              src={getImageUrl(brand.logo_url || brand.image) || ""}
               alt={brand.name}
               size="large"
             />

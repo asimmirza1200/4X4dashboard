@@ -25,6 +25,7 @@ import dayjs from "dayjs";
 //internal import
 import useAsync from "@/hooks/useAsync";
 import BrandServices from "@/services/BrandsServices";
+import { getImageUrl } from "@/utils/getImageUrl";
 import PageTitle from "@/components/Typography/PageTitle";
 import { SidebarContext } from "@/context/SidebarContext";
 import TableLoading from "@/components/preloader/TableLoading";
@@ -365,7 +366,7 @@ const BrandDetail = () => {
                 {brandData.logo_url && (
                   <div className="flex justify-center mb-4">
                     <img
-                      src={brandData.logo_url}
+                      src={getImageUrl(brandData.logo_url)}
                       alt={brand.name}
                       className="h-32 w-32 object-contain border rounded-lg p-2"
                     />

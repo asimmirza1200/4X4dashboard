@@ -26,6 +26,7 @@ import ProductRowActions from "@/components/product/ProductRowActions";
 import QuickEditModal from "@/components/product/QuickEditModal";
 import ProductServices from "@/services/ProductServices";
 import { SidebarContext } from "@/context/SidebarContext";
+import { getImageUrl } from "@/utils/getImageUrl";
 
 //internal import
 
@@ -200,7 +201,7 @@ const ProductTable = ({ products, isCheck, setIsCheck }) => {
                 {product?.image?.[0] ? (
                   <Avatar
                     className="p-1 bg-gray-50 shadow-none"
-                    src={product.image[0]}
+                    src={getImageUrl(product.image[0])}
                     alt="product"
                     size="small"
                   />

@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import useUtilsFunction from "@/hooks/useUtilsFunction";
 import ProductRowActions from "@/components/product/ProductRowActions";
 import CheckBox from "@/components/form/others/CheckBox";
+import { getImageUrl } from "@/utils/getImageUrl";
 
 const ProductCardMobile = ({
     product,
@@ -122,7 +123,7 @@ const ProductCardMobile = ({
                         {product?.image?.[0] ? (
                             <Avatar
                                 className="p-1 bg-gray-50 shadow-none"
-                                src={product.image[0]}
+                                src={getImageUrl(product.image[0])}
                                 alt="product"
                                 size="regular"
                             />
