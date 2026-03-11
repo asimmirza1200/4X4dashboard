@@ -14,7 +14,7 @@ export default defineConfig({
   // base: "/", // Set the base URL path for your application
 
   build: {
-    // outDir: "build", // Set the output directory for the build files
+    outDir: "build", // Set the output directory for the build files
     assetsDir: "@/assets", // Set the directory for the static assets
     // sourcemap: process.env.__DEV__ === "true",
     rollupOptions: {
