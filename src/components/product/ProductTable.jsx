@@ -200,10 +200,10 @@ const ProductTable = ({ products, isCheck, setIsCheck }) => {
               <TableCell className="w-16">
                 {product?.image?.[0] ? (
                   <Avatar
-                    className="p-1 bg-gray-50 shadow-none"
+                    className="p-2 bg-gray-50 shadow-none"
                     src={getImageUrl(product.image[0])}
                     alt="product"
-                    size="small"
+                    size="large"
                   />
                 ) : (
                   <Avatar

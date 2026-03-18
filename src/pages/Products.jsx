@@ -260,29 +260,19 @@ const Products = () => {
         // Download CSV Template
         const templateData = [
           {
-            "post_title": "Sample Product",
-            "post_name": "sample-product",
-            "post_content": "Product description",
-            "post_excerpt": "Short description",
-            "regular_price": "100.00",
-            "sale_price": "90.00",
-            "sku": "SKU001",
-            "stock_status": "instock",
-            "productId": "PROD001",
-            "manufacturerSku": "MFG001",
-            "internalSku": "INT001",
-            "tradePrice": "80.00",
-            "profitMarginDollar": "20.00",
-            "profitMarginPercentage": "25.00",
-            "quickDiscountDollar": "10.00",
-            "quickDiscountPercentage": "10.00",
-            "additionalProductDetails": "Additional details",
-            "tax:product_cat": "Category Name",
-            "tax:product_tag": "tag1|tag2|tag3",
-            "weight": "1.5",
-            "length": "10",
-            "width": "5",
-            "height": "3"
+            "ID": "unique-product-id",
+            "Name": "Sample Product",
+            "Description": "Product description goes here",
+            "SKU": "SKU001",
+            "Weight": "1.5",
+            "Brand": "Brand",
+            "Tags": "tag1|tag2|tag3",
+            "Images": "image1.jpg|image2.jpg",
+            "Price": "100.00",
+            "Status": "Published",
+            "Stock": "10",
+            "Featured": "Yes",
+            "Date Modified": new Date().toISOString().split('T')[0]
           }
         ];
 
@@ -313,7 +303,7 @@ const Products = () => {
       });
 
       const products = response.products || [];
-
+     console.log("products", products)
       if (exportType === "csv") {
         // Use backend CSV export if available, otherwise use client-side
         try {
@@ -327,7 +317,7 @@ const Products = () => {
             sort_by: sortBy,
             sort_dir: sortDir,
           });
-
+          console.log("csvResponse", csvResponse)
           const blob = new Blob([csvResponse.data], { type: 'text/csv;charset=utf-8;' });
           const link = document.createElement('a');
           const url = URL.createObjectURL(blob);
@@ -343,9 +333,25 @@ const Products = () => {
           link.click();
           document.body.removeChild(link);
         } catch (csvError) {
-          // Fallback to client-side export
+          // Fallback to client-side export with export format
+          const transformedProducts = products.map(product => ({
+            "ID": product._id || product.productId || "",
+            "Name": product.title?.en || product.title || "",
+            "Description": product.description?.en || product.description || "",
+            "SKU": product.sku || "",
+            "Weight": product.weight || "",
+            "Brand": product.brand|| "",
+            "Tags": product.tag ? product.tag.join("|") : "",
+            "Images": product.image ? product.image.join("|") : "",
+            "Price": product.prices?.price || product.prices?.originalPrice || "",
+            "Status": product.status === "show" ? "Published" : "Draft",
+            "Stock": product.stock || 0,
+            "Featured": product.isFeatured ? "Yes" : "No",
+            "Date Modified": product.updatedAt ? new Date(product.updatedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+          }));
+          
           exportFromJSON({
-            data: products,
+            data: transformedProducts,
             fileName: "products",
             exportType: exportFromJSON.types.csv,
           });
@@ -499,7 +505,7 @@ const Products = () => {
                       <Button
                         onClick={handleUploadMultiple}
                         className="h-10 px-4"
-                        disabled={isDisabled || !filename}
+                        disabled={!filename}
                       >
                         <span className="text-xs">{t("ImportNow")}</span>
                       </Button>

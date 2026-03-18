@@ -16,7 +16,6 @@ const Container = ({ setImageUrl, imageUrl, handleRemoveImage }) => {
     },
     [setImageUrl]
   );
-  console.log(imageUrl)
 
   const renderCard = useCallback(
     (card, i) => {

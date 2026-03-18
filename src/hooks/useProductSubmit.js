@@ -13,6 +13,48 @@ import { notifyError, notifySuccess } from "@/utils/toast";
 // import useTranslationValue from "./useTranslationValue";
 import useUtilsFunction from "./useUtilsFunction";
 
+// Safe JSON parsing helper
+const safeJSONParse = (jsonString) => {
+  // Handle null, undefined, non-string values
+  if (!jsonString || typeof jsonString !== 'string' || jsonString.trim() === "" || jsonString === '""') {
+    return [];
+  }
+  
+  // If it's already an array, return it as-is
+  if (Array.isArray(jsonString)) {
+    return jsonString;
+  }
+  
+  try {
+    const parsed = JSON.parse(jsonString);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn("JSON parse error:", error, "Input:", jsonString);
+    return [];
+  }
+};
+
+// Helper to convert image URLs to full URLs
+const processImageUrls = (images) => {
+  if (!Array.isArray(images)) return [];
+  
+  // Get the base URL from environment or use the same logic as Uploader
+  const baseURL = import.meta.env.VITE_APP_API_BASE_URL || 'http://localhost:5055/api';
+  const serverURL = baseURL.endsWith('/api') ? baseURL.slice(0, -4) : baseURL;
+  
+  return images.map(img => {
+    if (typeof img === 'string') {
+      // If it's already a full URL, return as-is
+      if (img.startsWith('http')) {
+        return img;
+      }
+      // If it's a relative path, convert to full URL
+      return `${serverURL}${img}`;
+    }
+    return img; // Return non-string values as-is
+  });
+};
+
 const useProductSubmit = (id) => {
   const location = useLocation();
   const { isDrawerOpen, closeDrawer, setIsUpdate, lang } =
@@ -251,22 +293,18 @@ const useProductSubmit = (id) => {
           setValue("height", res.height);
           setValue("width", res.width);
           setValue("length", res["length"]);
-          setValue("wight", res.weight);
+          setValue("weight", res.weight);
           setValue("metaTitle", res.metaTitle);
           setValue("metaDescription", res.metaDescription);
-          setMetaKeywords(
-            typeof res.metaKeywords === "string"
-              ? JSON.parse(res.metaKeywords)
-              : res.metaKeywords
-          );
+          setMetaKeywords(safeJSONParse(res.metaKeywords));
 
           setValue("excerpt", res.excerpt);
           setValue("slug", res.slug);
           setValue("show", res.show);
           setValue("barcode", res.barcode);
           setValue("stock", res.stock);
-          setTag(typeof res.tag === "string" ? JSON.parse(res.tag) : res.tag);
-          setImageUrl(res.image);
+          setTag(safeJSONParse(res.tag));
+          setImageUrl(processImageUrls(res.image));
           setVariants(res.variants);
           setValue("productId", res.productId);
           setProductId(res.productId);
@@ -349,7 +387,7 @@ const useProductSubmit = (id) => {
       setValue("height");
       setValue("width");
       setValue("length");
-      setValue("wight");
+      setValue("weight");
       setValue("metaTitle");
       setValue("metaDescription");
       setValue("quantity");
@@ -463,7 +501,7 @@ const useProductSubmit = (id) => {
             setValue("height", res.height);
             setValue("width", res.width);
             setValue("length", res["length"]);
-            setValue("wight", res.weight);
+            setValue("weight", res.weight);
             setValue("metaTitle", res.metaTitle);
             setValue("metaDescription", res.metaDescription);
             setValue("slug", res.slug);
@@ -520,27 +558,25 @@ const useProductSubmit = (id) => {
             setValue("directSupplierLink", res.directSupplierLink);
             setValue("brand", res.brand?._id || res.brand || "");
 
-            res.categories.map((category) => {
-              category.name = showingTranslateValue(category?.name, lang);
+            if (res.categories) {
+              res.categories.map((category) => {
+                category.name = showingTranslateValue(category?.name, lang);
+                return category;
+              });
+            }
 
-              return category;
-            });
+            if (res.category) {
+              res.category.name = showingTranslateValue(
+                res?.category?.name,
+                lang
+              );
+            }
+            setMetaKeywords(safeJSONParse(res.metaKeywords));
+            setSelectedCategory(res.categories || []);
+            setDefaultCategory(res?.category ? [res.category] : []);
+            setTag(safeJSONParse(res.tag));
 
-            res.category.name = showingTranslateValue(
-              res?.category?.name,
-              lang
-            );
-            console.log(JSON.parse(res.metaKeywords));
-            setSelectedCategory(res.categories);
-            setDefaultCategory([res?.category]);
-            setTag(typeof res.tag === "string" ? JSON.parse(res.tag) : res.tag);
-            setMetaKeywords(
-              typeof res.metaKeywords === "string"
-                ? JSON.parse(res.metaKeywords)
-                : res.metaKeywords
-            );
-
-            setImageUrl(res.image);
+            setImageUrl(processImageUrls(res.image));
             setVariants(res.variants);
             setIsCombination(res.isCombination);
             setQuantity(res?.stock);

@@ -8,48 +8,6 @@ import { SidebarContext } from "@/context/SidebarContext";
 import ProductServices from "@/services/ProductServices";
 import { notifyError, notifySuccess } from "@/utils/toast";
 
-const pickKeysAndCleanExcerpt = (obj, keys) => {
-  const cleanHTML = (html) => html.replace(/<\/?[^>]+(>|$)/g, ""); // Regular expression to strip tags
-  return keys.reduce((acc, key) => {
-    if (obj.hasOwnProperty(key)) {
-      acc[key] = key === "post_excerpt" ? cleanHTML(obj[key]) : obj[key];
-    }
-    return acc;
-  }, {});
-};
-
-// List of required keys
-const requiredKeys = [
-  "ID",
-  "height",
-  "images",
-  "length",
-  "low_stock_amount",
-  "post_content",
-  "post_excerpt",
-  "post_name",
-  "post_status",
-  "post_title",
-  "regular_price",
-  "sku",
-  "stock_status",
-  "tax:product_cat",
-  "tax:product_tag",
-  "weight",
-  "width",
-  "sale_price",
-  "meta:total_sales",
-  "productId",
-  "manufacturerSku",
-  "internalSku",
-  "tradePrice",
-  "profitMarginDollar",
-  "profitMarginPercentage",
-  "quickDiscountDollar",
-  "quickDiscountPercentage",
-  "additionalProductDetails",
-];
-
 // custom product upload validation schema
 const schema = {
   type: "object",
@@ -95,6 +53,8 @@ const schema = {
     additionalProductDetails: {
       type: "string",
     },
+    brand: { type: "object" },
+    isFeatured: { type: "boolean" },
   },
   required: ["prices", "title"],
 };
@@ -140,15 +100,24 @@ const useProductFilter = (data) => {
     const fileReader = new FileReader();
     const file = e.target?.files[0];
 
+    console.log("File detected:", file);
+    console.log("File type:", file?.type);
+
     if (file && file.type === "application/json") {
       setFileName(file?.name);
       setIsDisable(true);
 
       fileReader.readAsText(file, "UTF-8");
       fileReader.onload = (e) => {
-        const text = JSON.parse(e.target.result);
+        console.log("JSON file loaded successfully");
+        console.log("Raw file content:", e.target.result);
+        
+        try {
+          const text = JSON.parse(e.target.result);
+          console.log("Parsed JSON:", text);
 
-        const productData = text.map((value) => {
+          const productData = text.map((value) => {
+          console.log("Mapping value:", value);
           return {
             categories: value.categories,
             image: value.image,
@@ -157,7 +126,7 @@ const useProductFilter = (data) => {
             variants: value.variants,
             status: value.status,
             prices: value.prices,
-            isCombination: JSON.parse(value.isCombination.toLowerCase()),
+            isCombination: typeof value.isCombination === 'string' ? JSON.parse(value.isCombination.toLowerCase()) : Boolean(value.isCombination),
             title: value.title,
             productId: value.productId,
             slug: value.slug,
@@ -165,81 +134,77 @@ const useProductFilter = (data) => {
             category: value.category,
             stock: value.stock,
             description: value.description,
+            brand: value.brand || "",
+            weight: value.weight || "",
+            length: value.length || "",
+            width: value.width || "",
+            height: value.height || "",
           };
         });
-
+        console.log("Final productData:", productData);
+        // console.log("productData", productData);
         setSelectedFile(productData);
+        } catch (error) {
+          console.error("Error parsing JSON:", error);
+          notifyError("Error parsing JSON file: " + error.message);
+        }
       };
-    } else if (file && file.type === "text/csv") {
+    } else if (file && (file.type === "text/csv" || file.type === "application/csv" || file.type === "application/vnd.ms-excel" || file.name.toLowerCase().endsWith('.csv'))) {
+      console.log("CSV file detected, processing...");
       setFileName(file?.name);
       setIsDisable(true);
 
       fileReader.onload = async (event) => {
-        const text = event.target.result;
-        const json = await csvToJson().fromString(text);
-        const filteredProducts = json.map((product) =>
-          pickKeysAndCleanExcerpt(product, requiredKeys)
-        );
-        const productData = filteredProducts.map((value) => {
+        try {
+          console.log("CSV file loaded successfully");
+          const text = event.target.result;
+          console.log("Raw CSV content:", text);
+          
+          const json = await csvToJson().fromString(text);
+          console.log("Converted CSV to JSON:", json);
+          
+        const productData = json.map((value) => {
+          console.log("brand",value.Brand)
           return {
-            categories: [],
-            image: [],
-            sales: value?.["meta:total_sales"] || 0,
-            barcode: value?.barcode || "",
-            tag: value["tax:product_tag"]
-              ? value["tax:product_tag"].split("|")
-              : [],
-            variants: [],
-            status: "show",
+            image: value.Images || value.images ? (value.Images || value.images).split("|").map(img => img.trim()).filter(img => img) : [],
+            tag: value.Tags || value.tags ? (value.Tags || value.tags).split("|").map(tag => tag.trim()).filter(tag => tag) : [],
             prices: {
-              originalPrice: Number(value?.regular_price),
-              price: value?.sale_price
-                ? Number(value?.sale_price)
-                : Number(value?.regular_price),
-              discount: value?.sale_price
-                ? Number(value?.regular_price) - Number(value?.sale_price)
-                : 0,
-              tradePrice: Number(value?.tradePrice) || 0,
-            },
-            profitMargin: {
-              dollarDifference: Number(value?.profitMarginDollar) || 0,
-              percentageDifference: Number(value?.profitMarginPercentage) || 0,
-            },
-            quickDiscount: {
-              dollarAmount: Number(value?.quickDiscountDollar) || 0,
-              percentageAmount: Number(value?.quickDiscountPercentage) || 0,
-              isActive:
-                Number(value?.quickDiscountDollar) > 0 ||
-                Number(value?.quickDiscountPercentage) > 0,
+              originalPrice: Number(value?.Price || value?.price) || 0,
+              price: Number(value?.Price || value?.price) || 0,
+              discount: 0,
+              tradePrice: 0,
             },
             isCombination: false,
             title: {
-              en: value?.post_title,
+              en: value?.Name || value?.name || value?.["Product name"] || value?.["product name"] || "",
             },
-            excerpt: value?.post_excerpt,
-            weight: value?.weight,
-            length: value?.["length"],
-            width: value?.width,
-            height: value?.height,
-            productId: value?.productId || value?.ID,
-            slug: value?.post_name,
-            sku: value.sku,
-            manufacturerSku: value?.manufacturerSku || "",
-            internalSku: value?.internalSku || "",
-            additionalProductDetails: value?.additionalProductDetails || "",
-            category: value?.["tax:product_cat"] || "",
-            stock: value.stock_status === "instock" ? 20 : 0,
+            
+            weight: value?.Weight || value?.weight || "",
+            productId: value?.ID || value?.id || value?.Id || "",
+            slug: `product-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            sku: value?.SKU || value?.sku || "",
+            stock: Number(value?.Stock) || 10,
             description: {
-              en: value?.post_content || "",
+              en: value?.Description || value?.description || "",
             },
+            // ✅ FIX HERE
+    brand: value?.Brand
+      ? { name: value.Brand.trim() }
+      : null,
+            isFeatured: value?.Featured === "Yes" || value?.featured === "Yes",
           };
         });
 
         setSelectedFile(productData);
+        } catch (error) {
+          console.error("Error processing CSV:", error);
+          notifyError("Error processing CSV file: " + error.message);
+        }
       };
 
       fileReader.readAsText(file);
     } else {
+      console.log("Unsupported file type detected:", file?.type);
       setFileName(file?.name);
       setIsDisable(true);
 
@@ -249,25 +214,39 @@ const useProductFilter = (data) => {
 
   const handleUploadMultiple = (e) => {
     // return notifyError("This feature is disabled for demo!");
-    if (selectedFile.length > 1) {
+    if (selectedFile.length >= 1) {
+      console.log("Starting upload process with", selectedFile.length, "products");
+      console.log("Selected file data:", selectedFile);
+      
       setLoading(true);
-      let productDataValidation = selectedFile.map((value) =>
-        ajv.validate(schema, value)
-      );
+      let productDataValidation = selectedFile.map((value, index) => {
+        console.log(`Validating product ${index}:`, value);
+        const isValid = ajv.validate(schema, value);
+        console.log(`Validation errors for product ${index}:`, JSON.stringify(ajv.errors, null, 2));
+        return isValid;
+      });
+
+      console.log("Validation results:", productDataValidation);
 
       const isBelowThreshold = (currentValue) => currentValue === true;
       const validationData = productDataValidation.every(isBelowThreshold);
-      ProductServices.addAllProducts(selectedFile)
-        .then((res) => {
-          setIsUpdate(true);
-          setLoading(false);
-          notifySuccess(res.message);
-        })
-        .catch((err) => {
-          setLoading(false);
-          notifyError(err.message);
-        });
+      
+      console.log("All validations passed:", validationData);
+       console.log("Selected file data:", JSON.stringify(selectedFile, null, 2));
       if (validationData) {
+        ProductServices.addAllProducts(selectedFile)
+          .then((res) => {
+            console.log("Upload successful:", res);
+            setIsUpdate(true);
+            setLoading(false);
+            notifySuccess(res.message);
+            handleRemoveSelectFile(); // Clear the file after successful upload
+          })
+          .catch((err) => {
+            console.error("Upload error:", err);
+            setLoading(false);
+            notifyError(err.message);
+          });
       } else {
         setLoading(false);
         notifyError("Please enter valid data!");

@@ -30,8 +30,6 @@ const Uploader = ({ setImageUrl, imageUrl, product, folder }) => {
 
   const { data: globalSetting } = useAsync(SettingServices.getGlobalSetting);
 
-  // console.log("data", data);
-
   const { getRootProps, getInputProps, fileRejections } = useDropzone({
     accept: {
       "image/jpeg": [".jpeg", ".jpg"],
@@ -120,11 +118,15 @@ const Uploader = ({ setImageUrl, imageUrl, product, folder }) => {
         }
 
         const baseURL = import.meta.env.VITE_APP_API_BASE_URL || 'http://localhost:5055/api';
-
+// Extract server URL for images (remove /api suffix if present)
+const serverURL = baseURL.endsWith('/api') ? baseURL.slice(0, -4) : baseURL;
+       console.log("baseURL",baseURL)
+       console.log("serverURL",serverURL) 
         axios({
           // backend: app.use("/api/upload", uploadRoutes);
           // if baseURL already includes /api, just append /upload/images
           url: `${baseURL}/upload/images`,
+
           method: "POST",
           headers: {
             'Content-Type': 'multipart/form-data',
@@ -144,18 +146,27 @@ const Uploader = ({ setImageUrl, imageUrl, product, folder }) => {
               // For products, add the URL to the array
               const uploadedUrl = res?.data?.files?.[0]?.url || res?.data?.url;
               if (uploadedUrl) {
-                setImageUrl((imgUrl) => [...(imgUrl || []), uploadedUrl]);
+                console.log("uploadedUrl",uploadedUrl)
+                // Construct full URL if it's a relative path
+                const fullUrl = uploadedUrl.startsWith('http') 
+                  ? uploadedUrl 
+                  : `${serverURL}${uploadedUrl}`;
+                  console.log("fullUrl",fullUrl)
+                setImageUrl((imgUrl) => [...(imgUrl || []), fullUrl]);
               }
             } else {
               // For single image, set the URL directly
               const uploadedUrl = res?.data?.files?.[0]?.url || res?.data?.url;
               if (uploadedUrl) {
-                setImageUrl(uploadedUrl);
+                // Construct full URL if it's a relative path
+                const fullUrl = uploadedUrl.startsWith('http') 
+                  ? uploadedUrl 
+                  : `${serverURL}${uploadedUrl}`;
+                setImageUrl(fullUrl);
               }
             }
           })
           .catch((err) => {
-            console.error("err", err);
             notifyError(err.response?.data?.message || err.message || "Image upload failed");
             setLoading(false);
             setError("");

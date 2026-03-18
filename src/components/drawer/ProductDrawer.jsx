@@ -949,7 +949,6 @@ const ProductDrawer = ({ id }) => {
                     disabled={isCombination}
                     register={register}
                     minValue={0}
-                    defaultValue={0}
                     label="Product Weight"
                     name="weight"
                     type="number"
