@@ -5,6 +5,7 @@ import {
   TableCell,
   TableRow,
 } from "@windmill/react-ui";
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { t } from "i18next";
 import { FiZoomIn, FiStar } from "react-icons/fi";
 import { Link } from "react-router-dom";
@@ -17,6 +18,7 @@ import MainDrawer from "@/components/drawer/MainDrawer";
 import ProductDrawer from "@/components/drawer/ProductDrawer";
 import CheckBox from "@/components/form/others/CheckBox";
 import DeleteModal from "@/components/modal/DeleteModal";
+import ProductInfoModal from "@/components/product/ProductInfoModal";
 import EditDeleteButton from "@/components/table/EditDeleteButton";
 import ShowHideButton from "@/components/table/ShowHideButton";
 import Tooltip from "@/components/tooltip/Tooltip";
@@ -36,6 +38,8 @@ const ProductTable = ({ products, isCheck, setIsCheck }) => {
   const { setIsUpdate } = useContext(SidebarContext);
   const [quickEditProduct, setQuickEditProduct] = useState(null);
   const [isQuickEditOpen, setIsQuickEditOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
 
   // Website base URL (adjust based on your environment)
   const websiteBaseUrl = process.env.REACT_APP_WEBSITE_URL || "http://localhost:3000";
@@ -61,12 +65,8 @@ const ProductTable = ({ products, isCheck, setIsCheck }) => {
   };
 
   const handleView = (product) => {
-    if (product.slug) {
-      const productUrl = `${websiteBaseUrl}/product/${product.slug}`;
-      window.open(productUrl, "_blank");
-    } else {
-      toast.error(t("Product slug not found"));
-    }
+    setSelectedProduct(product);
+    setIsInfoModalOpen(true);
   };
 
   const handleDuplicate = async (product) => {
@@ -184,7 +184,7 @@ const ProductTable = ({ products, isCheck, setIsCheck }) => {
               : 'on_backorder';
 
           return (
-            <TableRow key={i + 1}>
+            <TableRow key={i + 1} className="group">
               {/* Checkbox */}
               <TableCell className="w-12">
                 <CheckBox
@@ -197,26 +197,42 @@ const ProductTable = ({ products, isCheck, setIsCheck }) => {
               </TableCell>
 
               {/* Thumbnail */}
-              <TableCell className="w-16">
-                {product?.image?.[0] ? (
-                  <Avatar
-                    className="p-2 bg-gray-50 shadow-none"
-                    src={getImageUrl(product.image[0])}
-                    alt="product"
-                    size="large"
-                  />
-                ) : (
-                  <Avatar
-                    src={`https://res.cloudinary.com/ahossain/image/upload/v1655097002/placeholder_kvepfp.png`}
-                    alt="product"
-                    size="small"
-                  />
-                )}
+              <TableCell className="w-20 relative">
+                <div className="flex items-center justify-center gap-4">
+                  {product?.image?.[0] ? (
+                    <Avatar
+                      className="p-2 bg-gray-50 shadow-none"
+                      src={getImageUrl(product.image[0])}
+                      alt="product"
+                      size="large"
+                    />
+                  ) : (
+                    <Avatar
+                      src={`https://res.cloudinary.com/ahossain/image/upload/v1655097002/placeholder_kvepfp.png`}
+                      alt="product"
+                      size="small"
+                    />
+                  )}
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => handleView(product)}
+                      className="p-1 rounded  transition-colors"
+                    >
+                      <DotLottieReact
+                        src="https://lottie.host/fb33c828-a199-44c1-8201-6399c60dde8b/ovXlMY3Ntd.lottie"
+                        loop
+                        autoplay
+                        className="w-8 h-8 cursor-pointer"
+                      />
+                    </button>
+                  </div>
+                </div>
               </TableCell>
 
               {/* Name with Row Actions */}
               <TableCell className="w-48 min-w-[180px] max-w-[200px]">
-                <div className="flex items-center gap-2 group">
+                <div className="flex items-center gap-2">
                   <div className="flex-1 min-w-0">
                     <h2
                       className="text-sm font-medium truncate"
@@ -238,6 +254,7 @@ const ProductTable = ({ products, isCheck, setIsCheck }) => {
                       onDuplicate={() => handleDuplicate(product)}
                       onTrash={() => handleTrash(product)}
                     />
+                    
                   </div>
                 </div>
               </TableCell>
@@ -349,6 +366,16 @@ const ProductTable = ({ products, isCheck, setIsCheck }) => {
           );
         })}
       </TableBody>
+
+      {/* Product Info Modal */}
+      <ProductInfoModal
+        product={selectedProduct}
+        isOpen={isInfoModalOpen}
+        onClose={() => {
+          setIsInfoModalOpen(false);
+          setSelectedProduct(null);
+        }}
+      />
     </>
   );
 };
