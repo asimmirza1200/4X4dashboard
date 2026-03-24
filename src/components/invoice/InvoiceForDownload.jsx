@@ -300,7 +300,7 @@ const InvoiceForDownload = ({
                 {data?.status === "Pending" && (
                   <Text style={{ color: "#eab308" }}>{data?.status}</Text>
                 )}
-                {data?.status === "Processing" && (
+                {data?.status === "Processing" || data?.status === "Paid" && (
                   <Text style={{ color: "#14b8a6" }}>{data?.status}</Text>
                 )}
                 {data?.status === "POS-Completed" && (

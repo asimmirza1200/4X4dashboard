@@ -17,7 +17,7 @@ const OrderTable = ({ orders }) => {
   const { t } = useTranslation();
   const { showDateTimeFormat, currency, getNumberTwo } = useUtilsFunction();
 
-  // console.log('orders',orders)
+  console.log('orders',orders)
 
   return (
     <>

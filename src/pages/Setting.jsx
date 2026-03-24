@@ -19,7 +19,7 @@ import AnimatedContent from "@/components/common/AnimatedContent";
 const Setting = () => {
   const { errors, register, isSave, isSubmitting, onSubmit, handleSubmit } =
     useSettingSubmit();
-
+   console.log("isSave",isSave)
   const {
     errors: stockErrors,
     register: stockRegister,

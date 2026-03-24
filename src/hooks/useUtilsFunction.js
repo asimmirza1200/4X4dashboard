@@ -16,8 +16,6 @@ const useUtilsFunction = () => {
   const globalSetting = settings.find(
     (value) => value.name === "globalSetting"
   );
-
-  // console.log("globalSetting", globalSetting);
   //for date and time format
   const showTimeFormat = (data, timeFormat) => {
     return dayjs(data).format(timeFormat);
@@ -85,7 +83,6 @@ const useUtilsFunction = () => {
     const fetchGlobalSetting = async () => {
       try {
         setLoading(true);
-        console.log("globalSetting setting not available");
         const res = await SettingServices.getGlobalSetting();
         const globalSettingData = {
           ...res,
@@ -93,15 +90,14 @@ const useUtilsFunction = () => {
         };
 
         dispatch(addSetting(globalSettingData));
-
         setLoading(false);
       } catch (err) {
         setError(err.message);
-        console.log("Error on getting storeCustomizationSetting setting", err);
+        console.log("Error on getting globalSetting", err);
       }
     };
 
-    if (!globalSetting) {
+    if (!globalSetting || Object.keys(globalSetting).length <= 1) {
       fetchGlobalSetting();
     }
   }, [globalSetting]);

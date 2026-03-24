@@ -42,7 +42,6 @@ const OrderInvoice = () => {
     showDateFormat,
     getNumberTwo,
   } = useUtilsFunction();
-
   return (
     <>
       <PageTitle> {t("InvoicePageTittle")} </PageTitle>
@@ -60,7 +59,7 @@ const OrderInvoice = () => {
                   {t("InvoiceStatus")}
                   <span className="pl-2 font-medium text-xs capitalize">
                     {" "}
-                    <Status status={data.status} />
+                    <Status status={data.order.status} />
                   </span>
                 </p>
               </h1>
@@ -86,7 +85,7 @@ const OrderInvoice = () => {
                   {t("InvoiceDate")}
                 </span>
                 <span className="text-sm text-gray-500 dark:text-gray-400 block">
-                  {showDateFormat(data?.createdAt)}
+                  {showDateFormat(data?.order.createdAt)}
                 </span>
               </div>
               <div className="mb-3 md:mb-0 lg:mb-0 flex flex-col">
@@ -94,7 +93,7 @@ const OrderInvoice = () => {
                   {t("InvoiceNo")}
                 </span>
                 <span className="text-sm text-gray-500 dark:text-gray-400 block">
-                  #{data?.invoice}
+                  #{data?.order.invoice}
                 </span>
               </div>
               <div className="flex flex-col lg:text-right text-left">
@@ -102,14 +101,14 @@ const OrderInvoice = () => {
                   {t("InvoiceTo")}
                 </span>
                 <span className="text-sm text-gray-500 dark:text-gray-400 block">
-                  {data?.user_info?.name} <br />
-                  {data?.user_info?.email}{" "}
-                  <span className="ml-2">{data?.user_info?.contact}</span>
+                  {data?.order.user_info?.name} <br />
+                  {data?.order.user_info?.email}{" "}
+                  <span className="ml-2">{data?.order.user_info?.contact}</span>
                   <br />
-                  {data?.user_info?.address?.substring(0, 30)}
+                  {data?.order.user_info?.address?.substring(0, 30)}
                   <br />
-                  {data?.user_info?.city}, {data?.user_info?.country},{" "}
-                  {data?.user_info?.zipCode}
+                  {data?.order.user_info?.city}, {data?.user_info?.country},{" "}
+                  {data?.order.user_info?.zipCode}
                 </span>
               </div>
             </div>
@@ -137,7 +136,7 @@ const OrderInvoice = () => {
                   </tr>
                 </TableHeader>
                 <Invoice
-                  data={data}
+                  data={data.order}
                   currency={currency}
                   getNumberTwo={getNumberTwo}
                 />
@@ -154,7 +153,7 @@ const OrderInvoice = () => {
                   {t("InvoicepaymentMethod")}
                 </span>
                 <span className="text-sm text-gray-500 dark:text-gray-400 font-semibold font-serif block">
-                  {data.paymentMethod}
+                  {data.order.paymentMethod}
                 </span>
               </div>
               <div className="mb-3 md:mb-0 lg:mb-0  flex flex-col sm:flex-wrap">
@@ -163,7 +162,7 @@ const OrderInvoice = () => {
                 </span>
                 <span className="text-sm text-gray-500 dark:text-gray-400 font-semibold font-serif block">
                   {currency}
-                  {getNumberTwo(data.shippingCost)}
+                  {getNumberTwo(data.order.shippingCost)}
                 </span>
               </div>
               <div className="mb-3 md:mb-0 lg:mb-0  flex flex-col sm:flex-wrap">
@@ -172,7 +171,7 @@ const OrderInvoice = () => {
                 </span>
                 <span className="text-sm text-gray-500 dark:text-gray-400 font-semibold font-serif block">
                   {currency}
-                  {getNumberTwo(data.discount)}
+                  {getNumberTwo(data.order.discount)}
                 </span>
               </div>
               <div className="flex flex-col sm:flex-wrap">
@@ -181,7 +180,7 @@ const OrderInvoice = () => {
                 </span>
                 <span className="text-xl font-serif font-bold text-red-500 dark:text-emerald-500 block">
                   {currency}
-                  {getNumberTwo(data.total)}
+                  {getNumberTwo(data.order.total)}
                 </span>
               </div>
             </div>
@@ -194,7 +193,7 @@ const OrderInvoice = () => {
             document={
               <InvoiceForDownload
                 t={t}
-                data={data}
+                data={data.order}
                 currency={currency}
                 getNumberTwo={getNumberTwo}
                 showDateFormat={showDateFormat}

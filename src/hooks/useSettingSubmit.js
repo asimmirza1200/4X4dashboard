@@ -26,7 +26,17 @@ const useSettingSubmit = (id) => {
   // console.log("enabledCOD", enabledCOD);
 
   const onSubmit = async (data) => {
-    // console.log("data", data);
+    console.log("data", data);
+    console.log("isSave value:", isSave);
+    
+    // Ensure default_currency has a value
+    const processedData = {
+      ...data,
+      default_currency: data.default_currency || "$"
+    };
+    
+    console.log("processedData:", processedData);
+    localStorage.setItem("data", JSON.stringify(processedData));
     // return notifyError("This feature is disabled for demo!");
     try {
       setIsSubmitting(true);
@@ -34,23 +44,23 @@ const useSettingSubmit = (id) => {
         name: "globalSetting",
         setting: {
           //for common setting
-          number_of_image_per_product: data.number_of_image_per_product,
-          shop_name: data.shop_name,
-          address: data.address,
-          company_name: data.company_name,
-          vat_number: data.vat_number,
-          post_code: data.post_code,
-          contact: data.contact,
-          email: data.email,
-          website: data.website,
-          receipt_size: data.receipt_size,
-          default_currency: data.default_currency,
-          default_time_zone: data.default_time_zone,
-          default_date_format: data.default_date_format,
+          number_of_image_per_product: processedData.number_of_image_per_product,
+          shop_name: processedData.shop_name,
+          address: processedData.address,
+          company_name: processedData.company_name,
+          vat_number: processedData.vat_number,
+          post_code: processedData.post_code,
+          contact: processedData.contact,
+          email: processedData.email,
+          website: processedData.website,
+          receipt_size: processedData.receipt_size,
+          default_currency: processedData.default_currency,
+          default_time_zone: processedData.default_time_zone,
+          default_date_format: processedData.default_date_format,
         },
       };
 
-      // console.log("global setting", settingData, "data", data);
+      console.log("global setting", settingData, "data", data);
       // return;
 
       if (!isSave) {
@@ -63,7 +73,7 @@ const useSettingSubmit = (id) => {
         setIsSubmitting(false);
         dispatch(removeSetting("globalSetting"));
 
-        window.location.reload();
+        // window.location.reload();
         notifySuccess(res.message);
       } else {
         const res = await SettingServices.addGlobalSetting(settingData);
@@ -88,7 +98,7 @@ const useSettingSubmit = (id) => {
     (async () => {
       try {
         const res = await SettingServices.getGlobalSetting();
-        // console.log("res>>>", res);
+        console.log("getGlobalSetting response:", res);
         if (res) {
           setIsSave(false);
           setValue(
@@ -109,6 +119,8 @@ const useSettingSubmit = (id) => {
           setValue("default_date_format", res?.default_date_format);
         }
       } catch (err) {
+        console.log("No settings found or error:", err);
+        console.log("Keeping isSave as true (will add new settings)");
         notifyError(err?.response?.data?.message || err?.message);
       }
     })();

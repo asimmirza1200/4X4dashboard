@@ -52,8 +52,7 @@ const OMSTable = ({
         orders?.map((order, i) => {
           const isSelected = selectedOrders.includes(order._id);
           const customerName =
-            order.user_info?.name || order.user?.name || "N/A";
-
+            order.user_info?.name || order.user?.name || order.customer?.name || order.shipping_address?.name || order.billing_address?.name || "N/A";
           return (
             <TableRow key={order._id || i}>
               {/* Checkbox */}
@@ -75,7 +74,7 @@ const OMSTable = ({
                   >
                     #{order.orderId || order.invoice}
                   </Link>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
                     {customerName}
                   </p>
                 </div>
