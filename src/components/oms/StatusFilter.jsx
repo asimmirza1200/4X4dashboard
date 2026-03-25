@@ -12,7 +12,6 @@ const StatusFilter = ({ value, onChange }) => {
     { value: "Payment-Processing", label: "Payment Processing" },
     { value: "Pending", label: "Pending" },
     { value: "Processing", label: "Processing" },
-    { value: "Paid", label: "Paid" },
     { value: "Awaiting Stock", label: "Awaiting Stock" },
     { value: "On-Hold", label: "On Hold" },
     { value: "Picking/Packing", label: "Picking/Packing" },

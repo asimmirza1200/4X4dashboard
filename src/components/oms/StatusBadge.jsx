@@ -29,7 +29,7 @@ const StatusBadge = ({ status }) => {
     }
 
     // Processing - Blue
-    if (statusLower === "processing" || statusLower==="paid" ) {
+    if (statusLower === "processing" ) {
       return { type: "primary", className: "" };
     }
 

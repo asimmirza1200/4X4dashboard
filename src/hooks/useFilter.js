@@ -174,7 +174,7 @@ const useFilter = (data) => {
       );
       setPending(orderPending);
       const orderProcessing = services?.filter(
-        (statusO) => statusO.status === "Processing" || statusO.status === "Paid"
+        (statusO) => statusO.status === "Processing"
       );
       setProcessing(orderProcessing);
       const orderDelivered = services?.filter(

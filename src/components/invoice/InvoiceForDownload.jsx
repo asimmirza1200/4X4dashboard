@@ -287,79 +287,72 @@ const InvoiceForDownload = ({
                   fontFamily: "Open Sans",
                   fontWeight: "bold",
                   textTransform: "uppercase",
-                  alignItems: "baseline",
+                  fontSize: 20,
+                  color: "#1f2937"
                 }}
               >
                 {t("invoice")}
               </Text>
-              <Text style={styles.info}>
-                Status :{" "}
-                {data?.status === "Merged" && (
-                  <Text style={{ color: "#eab308" }}>{data?.status}</Text>
-                )}
-                {data?.status === "Pending" && (
-                  <Text style={{ color: "#eab308" }}>{data?.status}</Text>
-                )}
-                {data?.status === "Processing" || data?.status === "Paid" && (
-                  <Text style={{ color: "#14b8a6" }}>{data?.status}</Text>
-                )}
-                {data?.status === "POS-Completed" && (
-                  <Text style={{ color: "#14b8a6" }}>{data?.status}</Text>
-                )}
-                {data?.status === "Fully Returned" && (
-                  <Text style={{ color: "#14b8a6" }}>{data?.status}</Text>
-                )}
-                {data?.status === "Partial Returned" && (
-                  <Text style={{ color: "#14b8a6" }}>{data?.status}</Text>
-                )}
-                {data?.status === "Delivered" && (
-                  <Text style={{ color: "#22c55e" }}>{data?.status}</Text>
-                )}
-                {data?.status === "Cancel" && (
-                  <Text style={{ color: "#f43f5e" }}>{data?.status}</Text>
-                )}
-                {data?.status === "Deleted" && (
-                  <Text style={{ color: "#f43f5e" }}>{data?.status}</Text>
-                )}
-              </Text>
-              {globalSetting?.vat_number && (
-                <Text style={styles.info}>
-                  <Text className="font-semibold text-xs capitalize mt-2">
-                    VAT Number :{" "}
-                    <Text className="text-emerald-500">
-                      {globalSetting?.vat_number}
-                    </Text>
-                  </Text>
+              <Text style={[styles.info, { marginTop: 4 }]}>
+                {t("InvoiceStatus")}
+                <Text style={{ 
+                  color: data?.status === "Delivered" ? "#22c55e" : 
+                         data?.status === "Cancel" || data?.status === "Deleted" ? "#f43f5e" :
+                         data?.status === "Processing" ? "#14b8a6" : "#eab308",
+                  fontWeight: "medium",
+                  textTransform: "capitalize"
+                }}>
+                  {" "}{data?.status}
                 </Text>
-              )}
+              </Text>
+              <View style={{ marginTop: 4 }}>
+                <Text style={{ fontSize: 12, color: "#6b7280" }}>
+                  Payment Status:
+                </Text>
+                <View style={{
+                  backgroundColor: "#22c55e", 
+                  paddingHorizontal: 4,
+                  paddingVertical: 1,
+                  borderRadius: 2,
+                  marginLeft: 4,
+                  display: "inline-block"
+                }}>
+                  <Text style={{ 
+                    color: "#ffffff",
+                    fontWeight: "medium",
+                    fontSize: 10,
+                    textTransform: "capitalize"
+                  }}>
+                    {" "}{data?.paymentStatus?.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()) || 'N/A'}
+                  </Text>
+                </View>
+              </View>
             </View>
 
             <View style={{ alignItems: "flex-end" }}>
               <Text
                 style={{
-                  flexDirection: "row",
-                  marginLeft: 80,
-                  marginTop: 35,
+                  fontSize: 18,
+                  fontWeight: "bold",
                   textAlign: "right",
+                  marginBottom: 8,
+                  fontFamily: "Open Sans"
                 }}
               >
                 <Image
                   src={logo}
                   alt="all4x4"
                   style={{
-                    width: 90,
-                    alignItems: "right",
-                    textAlign: "right",
-                    float: "right",
+                    width: 110,
                   }}
                 />
               </Text>
               <Text
                 style={{
-                  fontSize: 9,
-                  color: "#888",
-                  marginTop: 2,
+                  fontSize: 14,
+                  color: "#6b7280",
                   textAlign: "right",
+                  lineHeight: 1.5
                 }}
               >
                 {globalSetting?.address}
@@ -375,12 +368,15 @@ const InvoiceForDownload = ({
 
           <View style={styles.invoiceSecond}>
             <View style={{ width: "25%", alignItems: "baseline" }}>
-              <Text style={[styles.title, { fontSize: 10 }]}>{t("date")}</Text>
+              <Text style={[styles.title, { fontSize: 12, color: "#6b7280" }]}>
+                {t("InvoiceDate")}
+              </Text>
               <Text
                 style={{
-                  fontSize: 9,
+                  fontSize: 14,
                   color: "#6b7280",
                   textAlign: "left",
+                  marginTop: 4
                 }}
               >
                 {data?.createdAt !== undefined && (
@@ -389,146 +385,71 @@ const InvoiceForDownload = ({
               </Text>
             </View>
             <View style={{ width: "25%", alignItems: "baseline" }}>
-              <Text style={styles.title}>
-                <Text
-                  style={{ width: "25%", alignItems: "baseline", fontSize: 10 }}
-                >
-                  {t("InvoiceNo")}
-                </Text>
+              <Text style={[styles.title, { fontSize: 12, color: "#6b7280" }]}>
+                {t("InvoiceNo")}
               </Text>
-              <Text style={styles.title}>
-                <Text style={{ textAlign: "left" }}>
-                  <Text
-                    style={{
-                      fontSize: 9,
-                      color: "#6b7280",
-                      marginLeft: "4%",
-                      marginTop: "7px",
-                      textAlign: "left",
-                    }}
-                  >
-                    #{data?.invoice}
-                  </Text>
-                </Text>
+              <Text style={{
+                fontSize: 14,
+                color: "#6b7280",
+                textAlign: "left",
+                marginTop: 4
+              }}>
+                #{data?.invoice}
               </Text>
             </View>
 
-            <View
-              style={{ width: "25%", alignItems: "baseline", float: "right" }}
-            >
-              <Text style={styles.title}>
-                <Text
-                  style={{
-                    fontSize: 10,
-                    float: "right",
-                    textAlign: "right",
-                    alignItems: "baseline",
-                  }}
-                >
-                  {t("InvoiceTo")}
-                </Text>
+            <View style={{ width: "50%", alignItems: "flex-end" }}>
+              <Text style={[styles.title, { fontSize: 12, color: "#6b7280", textAlign: "right" }]}>
+                {t("InvoiceTo")}
               </Text>
-              <Text style={styles.title}>
-                <Text
-                  style={{
-                    textAlign: "right",
-                    fontSize: 9,
-                    textTransform: "lowercase",
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 9,
-                      color: "#6b7280",
-                      marginTop: "7px",
-                      textAlign: "right",
-                      textTransform: "lowercase",
-                    }}
-                  >
-                    {data?.user_info?.name}
-                    {"\n"}
-                    {data?.user_info?.contact}
-                    {"\n"}
-                    {data?.user_info?.email}
-                    {"\n"}
-                    {data?.user_info?.address?.substring(0, 30)}
-                    {"\n"}
-                    {data?.user_info?.city}, {data?.user_info?.country},{" "}
-                    {data?.user_info?.zipCode}
-                  </Text>
-                </Text>
+              <Text style={{
+                fontSize: 14,
+                color: "#6b7280",
+                textAlign: "right",
+                marginTop: 4,
+                lineHeight: 1.4
+              }}>
+                {data?.user_info?.name}
+                {"\n"}
+                {data?.user_info?.email}{" "}{data?.user_info?.contact}
+                {"\n"}
+                {data?.user_info?.address?.substring(0, 30)}
+                {"\n"}
+                {data?.user_info?.city}, {data?.user_info?.country}, {data?.user_info?.zipCode}
               </Text>
             </View>
           </View>
 
           <View style={styles.table}>
             <View style={styles.tableRowHeder}>
-              {/* <View style={styles.tableCol}>
+              <View style={[styles.tableCol, { width: "10%" }]}>
                 <Text style={styles.tableCell}>
-                  <span style={styles.header}>{t('sr')}</span>
-                </Text>
-              </View> */}
-              <View style={styles.tableCol}>
-                <Text style={styles.tableCell}>
-                  <Text
-                    style={{
-                      color: "#6b7280",
-                      fontSize: 9,
-                      fontFamily: "Open Sans",
-                      fontWeight: "bold",
-                      textTransform: "uppercase",
-                      textAlign: "left",
-                    }}
-                  >
-                    Product Title
-                  </Text>
+                  <Text style={styles.header}>{t("Sr")}</Text>
                 </Text>
               </View>
-              <View style={styles.tableCol}>
+              <View style={[styles.tableCol, { width: "40%" }]}>
                 <Text style={styles.tableCell}>
-                  <Text
-                    style={{
-                      color: "#6b7280",
-                      fontSize: 9,
-                      fontFamily: "Open Sans",
-                      fontWeight: "bold",
-                      textTransform: "uppercase",
-                      textAlign: "center",
-                    }}
-                  >
+                  <Text style={styles.header}>Product Title</Text>
+                </Text>
+              </View>
+              <View style={[styles.tableCol, { width: "15%" }]}>
+                <Text style={styles.tableCell}>
+                  <Text style={[styles.header, { textAlign: "center" }]}>
                     {t("Quantity")}
                   </Text>
                 </Text>
               </View>
-              <View style={styles.tableCol}>
+              <View style={[styles.tableCol, { width: "15%" }]}>
                 <Text style={styles.tableCell}>
-                  <Text
-                    style={{
-                      color: "#6b7280",
-                      fontSize: 9,
-                      fontFamily: "Open Sans",
-                      fontWeight: "bold",
-                      textTransform: "uppercase",
-                      textAlign: "left",
-                    }}
-                  >
+                  <Text style={[styles.header, { textAlign: "center" }]}>
                     {t("ItemPrice")}
                   </Text>
                 </Text>
               </View>
 
-              <View style={styles.tableCol}>
+              <View style={[styles.tableCol, { width: "20%" }]}>
                 <Text style={styles.tableCell}>
-                  <Text
-                    style={{
-                      color: "#6b7280",
-                      fontSize: 9,
-                      fontFamily: "Open Sans",
-                      fontWeight: "bold",
-                      textTransform: "uppercase",
-                      textAlign: "right",
-                    }}
-                  >
+                  <Text style={[styles.header, { textAlign: "right" }]}>
                     {t("Amount")}
                   </Text>
                 </Text>
@@ -536,19 +457,23 @@ const InvoiceForDownload = ({
             </View>
             {data?.cart?.map((item, i) => (
               <View key={i} style={styles.tableRow}>
-                <View style={styles.tableCol}>
+                <View style={[styles.tableCol, { width: "10%" }]}>
                   <Text style={styles.tableCell}>
-                    {item.title?.substring(0, 20)}
+                    {i + 1}
                   </Text>
                 </View>
-                <View style={styles.tableCol}>
-                  <Text style={styles.tableCellQuantity}>
+                <View style={[styles.tableCol, { width: "40%" }]}>
+                  <Text style={styles.tableCell}>
+                    {item.title?.substring(0, 50)}
+                  </Text>
+                </View>
+                <View style={[styles.tableCol, { width: "15%" }]}>
+                  <Text style={[styles.tableCellQuantity, { textAlign: "center" }]}>
                     <Text
                       style={{
-                        fontSize: 10,
+                        fontSize: 12,
                         fontWeight: "bold",
                         textAlign: "center",
-                        alignItems: "center",
                         fontFamily: "Open Sans",
                       }}
                     >
@@ -556,13 +481,12 @@ const InvoiceForDownload = ({
                     </Text>
                   </Text>
                 </View>
-                <View style={styles.tableCol}>
-                  <Text style={styles.tableCell}>
+                <View style={[styles.tableCol, { width: "15%" }]}>
+                  <Text style={[styles.tableCell, { textAlign: "center" }]}>
                     <Text
                       style={{
-                        fontSize: 10,
+                        fontSize: 12,
                         fontWeight: "bold",
-                        textAlign: "left",
                         fontFamily: "Open Sans",
                       }}
                     >
@@ -572,14 +496,13 @@ const InvoiceForDownload = ({
                   </Text>
                 </View>
 
-                <View style={styles.tableCol}>
-                  <Text style={styles.tableCell}>
+                <View style={[styles.tableCol, { width: "20%" }]}>
+                  <Text style={[styles.tableCell, { textAlign: "right" }]}>
                     <Text
                       style={{
-                        fontSize: 10,
+                        fontSize: 12,
                         color: "#ef4444",
                         fontWeight: "bold",
-                        textAlign: "right",
                         fontFamily: "Open Sans",
                       }}
                     >
@@ -594,72 +517,120 @@ const InvoiceForDownload = ({
 
           <View style={styles.invoiceThird}>
             <View style={{ width: "25%", alignItems: "baseline" }}>
-              <Text style={styles.title}>{t("InvoicepaymentMethod")}</Text>
-              <Text style={{ fontSize: 10, color: "#0e9f6e" }}>
+              <Text style={[styles.title, { fontSize: 12, color: "#6b7280" }]}>
+                {t("InvoicepaymentMethod")}
+              </Text>
+              <Text style={{ fontSize: 14, color: "#0e9f6e", marginTop: 4 }}>
                 {data?.paymentMethod}
               </Text>
+              
+              {data?.stripePaymentIntentId && (
+                <Text style={{ fontSize: 10, color: "#6b7280", marginTop: 1 }}>
+                  Trans ID: {data?.stripePaymentIntentId}
+                </Text>
+              )}
             </View>
             <View style={{ width: "25%", alignItems: "baseline" }}>
-              <Text style={styles.title}>
-                <Text style={{ width: "25%", alignItems: "baseline" }}>
-                  Sub Total
-                </Text>
+              <Text style={[styles.title, { fontSize: 12, color: "#6b7280" }]}>
+                {t("ShippingCost")}
               </Text>
-              <Text style={styles.title}>
-                <Text style={{ textAlign: "left" }}>
-                  <Text style={styles.infoCost}>
-                    {currency}
-
-                    {getNumberTwo(data?.subTotal)}
-                  </Text>
-                </Text>
-              </Text>
-            </View>
-
-            <View style={{ width: "25%", alignItems: "baseline" }}>
-              <Text style={styles.title}>
-                <Text style={{ textAlign: "left" }}>{t("ShippingCost")}</Text>
-              </Text>
-              <Text style={styles.title}>
-                <Text style={{ textAlign: "left" }}>
-                  <Text style={styles.infoCost}>
-                    {currency}
-                    {getNumberTwo(data?.shippingCost)}
-                  </Text>
-                </Text>
+              <Text style={{ fontSize: 14, color: "#6b7280", marginTop: 4 }}>
+                {currency}
+                {getNumberTwo(data?.shippingCost)}
               </Text>
             </View>
             <View style={{ width: "25%", alignItems: "baseline" }}>
-              <Text style={styles.title}>
-                <Text style={{ textAlign: "left" }}>{t("discount")} </Text>
+              <Text style={[styles.title, { fontSize: 12, color: "#6b7280" }]}>
+                {t("InvoiceDicount")}
               </Text>
-              <Text style={styles.title}>
-                <Text style={{ textAlign: "left" }}>
-                  <Text style={styles.infoCost}>
-                    {" "}
-                    {currency}
-                    {getNumberTwo(data?.discount)}
-                  </Text>
-                </Text>
+              <Text style={{ fontSize: 14, color: "#6b7280", marginTop: 4 }}>
+                {currency}
+                {getNumberTwo(data?.discount)}
               </Text>
             </View>
             <View style={{ width: "25%", alignItems: "baseline" }}>
-              <Text style={styles.title}>
-                <Text
-                  style={{ width: "45%", textAlign: "right", float: "left" }}
-                >
-                  Total
-                </Text>
+              <Text style={[styles.title, { fontSize: 12, color: "#6b7280" }]}>
+                {t("InvoiceTotalAmount")}
               </Text>
-              <Text style={styles.title}>
-                <Text style={styles.totalAmount}>
-                  {currency}
-
-                  {getNumberTwo(data?.total)}
-                </Text>
+              <Text style={{ fontSize: 20, color: "#ef4444", fontWeight: "bold", marginTop: 4 }}>
+                {currency}
+                {getNumberTwo(data?.total)}
               </Text>
             </View>
           </View>
+
+          {/* Payment Details Section */}
+          {data?.paymentStatus && (
+            <View style={{
+              marginTop: 20,
+              paddingTop: 15,
+              borderTop: 1,
+              borderColor: "#e5e7eb",
+              paddingLeft: 13,
+              paddingRight: 13
+            }}>
+              <Text style={[styles.title, { fontSize: 9, marginBottom: 8 }]}>
+                Payment Details
+              </Text>
+              <View style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                flexWrap: "wrap"
+              }}>
+                <View style={{ width: "50%", marginBottom: 5 }}>
+                  <Text style={{ fontSize: 8, color: "#6b7280" }}>
+                    Payment Date:
+                  </Text>
+                  <Text style={{ fontSize: 9, color: "#374151" }}>
+                    {data?.paymentDate ? 
+                      new Date(data.paymentDate).toLocaleDateString() : 
+                      "Pending"
+                    }
+                  </Text>
+                </View>
+                {data?.paymentStatus && (
+                <View style={{
+                  backgroundColor: "#22c55e", 
+                  paddingHorizontal: 6,
+                  paddingVertical: 2,
+                  borderRadius: 3,
+                  marginTop: 2,
+                  alignSelf: "flex-start"
+                }}>
+                  <Text style={{ 
+                    fontSize: 10, 
+                    color: "#ffffff",
+                    fontWeight: "medium"
+                  }}>
+                    Status: {data?.paymentStatus?.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
+                  </Text>
+                </View>
+              )}
+                {data?.paymentAmount && (
+                  <View style={{ width: "50%", marginBottom: 5 }}>
+                    <Text style={{ fontSize: 8, color: "#6b7280" }}>
+                      Paid Amount:
+                    </Text>
+                    <Text style={{ fontSize: 9, color: "#374151" }}>
+                      {currency}{getNumberTwo(data.paymentAmount)}
+                    </Text>
+                  </View>
+                )}
+                {data?.refundAmount && data.refundAmount > 0 && (
+                  <View style={{ width: "100%", marginTop: 8 }}>
+                    <Text style={{ fontSize: 8, color: "#6b7280", marginBottom: 3 }}>
+                      Refund Information:
+                    </Text>
+                    <View style={{ marginLeft: 10 }}>
+                      <Text style={{ fontSize: 8, color: "#374151" }}>
+                        Refund Amount: {currency}{getNumberTwo(data.refundAmount)}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+              </View>
+            </View>
+          )}
         </Page>
       </Document>
     </>

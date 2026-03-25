@@ -24,6 +24,7 @@ import logo from "@/assets/img/logo/logo.png";
 import PageTitle from "@/components/Typography/PageTitle";
 import useUtilsFunction from "@/hooks/useUtilsFunction";
 import InvoiceForDownload from "@/components/invoice/InvoiceForDownload";
+import PaymentStatus from "@/components/oms/PaymentStatus";
 
 const OrderInvoice = () => {
   const { t } = useTranslation();
@@ -42,6 +43,14 @@ const OrderInvoice = () => {
     showDateFormat,
     getNumberTwo,
   } = useUtilsFunction();
+  console.log("OrderInvoice", data);
+  //globalSetting
+  console.log("globalSetting", globalSetting);
+  console.log("PDF Data being passed:", {
+    data: data?.order,
+    currency,
+    globalSetting
+  });
   return (
     <>
       <PageTitle> {t("InvoicePageTittle")} </PageTitle>
@@ -60,6 +69,13 @@ const OrderInvoice = () => {
                   <span className="pl-2 font-medium text-xs capitalize">
                     {" "}
                     <Status status={data.order.status} />
+                  </span>
+                </p>
+                <p className="text-xs mt-1 text-gray-500">
+                  Payment Status:
+                  <span className="pl-2 font-medium text-xs capitalize">
+                    {" "}
+                    <PaymentStatus order={data.order} />
                   </span>
                 </p>
               </h1>
@@ -197,6 +213,7 @@ const OrderInvoice = () => {
                 currency={currency}
                 getNumberTwo={getNumberTwo}
                 showDateFormat={showDateFormat}
+                globalSetting={globalSetting}
               />
             }
             fileName="Invoice"
@@ -204,6 +221,13 @@ const OrderInvoice = () => {
             {({ blob, url, loading, error }) =>
               loading ? (
                 "Loading..."
+              ) : error ? (
+                <button className="flex items-center text-sm leading-5 transition-colors duration-150 font-medium focus:outline-none px-5 py-2 rounded-md text-white bg-red-500 border border-transparent active:bg-red-600 hover:bg-red-600 w-auto cursor-pointer">
+                  Error: {error.message || "Failed to generate PDF"}
+                  <span className="ml-2 text-base">
+                    <IoCloudDownloadOutline />
+                  </span>
+                </button>
               ) : (
                 <button className="flex items-center text-sm leading-5 transition-colors duration-150 font-medium focus:outline-none px-5 py-2 rounded-md text-white bg-emerald-500 border border-transparent active:bg-emerald-600 hover:bg-emerald-600  w-auto cursor-pointer">
                   Download Invoice

@@ -1,7 +1,8 @@
 import React from "react";
-import { Modal, ModalBody, ModalHeader, Button } from "@windmill/react-ui";
-import { FiX, FiPackage, FiUser, FiDollarSign, FiTruck } from "react-icons/fi";
+import { Modal, ModalBody, ModalHeader, Button, Badge } from "@windmill/react-ui";
+import { FiX, FiPackage, FiUser, FiDollarSign, FiTruck, FiCreditCard } from "react-icons/fi";
 import StatusBadge from "./StatusBadge";
+import PaymentStatus from "./PaymentStatus";
 import useUtilsFunction from "@/hooks/useUtilsFunction";
 
 /**
@@ -37,7 +38,7 @@ const OrderQuickView = ({ isOpen, onClose, order }) => {
         </Button>
       </ModalHeader>
 
-      <ModalBody className="space-y-6">
+      <ModalBody className="max-h-[80vh] overflow-y-auto space-y-6">
         {/* Order Status */}
         <div className="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-gray-700">
           <div>
@@ -184,6 +185,19 @@ const OrderQuickView = ({ isOpen, onClose, order }) => {
                 {getNumberTwo(order.total || 0)}
               </span>
             </div>
+          </div>
+        </div>
+
+        {/* Payment Information */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <FiCreditCard className="w-5 h-5 text-gray-500" />
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+              Payment Information
+            </h3>
+          </div>
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+            <PaymentStatus order={order} />
           </div>
         </div>
 

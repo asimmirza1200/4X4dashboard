@@ -10,8 +10,8 @@ const Status = ({ status }) => {
         {status === "Waiting for Password Reset" && (
           <Badge type="warning">{status}</Badge>
         )}
-         {status === "Payment-Processing" && <Badge type="warning">{status}</Badge>}
-        {(status === "Processing" || status === "Paid") && <Badge>{status}</Badge>}
+        {status === "Payment-Processing" && <Badge type="warning">{status}</Badge>}
+        {status === "Processing" && <Badge>{status}</Badge>}
         {status === "Out-For-Delivery" && <Badge>{status}</Badge>}
         {(status === "Delivered" || status === "Active") && (
           <Badge type="success">{status}</Badge>
