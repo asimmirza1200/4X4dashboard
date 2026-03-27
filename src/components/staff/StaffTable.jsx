@@ -21,7 +21,7 @@ const StaffTable = ({ staffs, lang }) => {
     isSubmitting,
     handleResetPassword,
   } = useToggleDrawer();
-
+  console.log("staffs",staffs)
   const { showDateFormat, showingTranslateValue } = useUtilsFunction();
 
   return (
@@ -60,7 +60,7 @@ const StaffTable = ({ staffs, lang }) => {
             <TableCell>
               <span className="text-sm">
                 {/* {dayjs(staff.joiningData).format("DD/MM/YYYY")} */}
-                {showDateFormat(staff.joiningData)}
+                {showDateFormat(staff.createdAt)}
               </span>
             </TableCell>
             <TableCell>
