@@ -1,217 +1,172 @@
 import { useTranslation } from "react-i18next";
 import ReactTagInput from "@pathofdev/react-tag-input";
 import { useForm } from "react-hook-form";
-import { useEffect, useState } from "react"; // Import useState and useEffect
+import { useEffect, useState } from "react";
 
 import { Input, Textarea, Button } from "@windmill/react-ui";
 import PageTitle from "@/components/Typography/PageTitle";
 import { pages } from "@/utils/static-seo";
-import LabelArea from "@/components/form/selectOption/LabelArea";
 import requests from "@/services/httpService";
 import { notifyError, notifySuccess } from "@/utils/toast";
 
 const SEO = () => {
-        const { t } = useTranslation();
+  const { t } = useTranslation();
+  const [initialValues, setInitialValues] = useState({});
+  const [keywordsState, setKeywordsState] = useState({});
+  const [keywordsErrors, setKeywordsErrors] = useState({}); // track keywords validation errors
+ const [loading, setLoading] = useState(true); // Loader state
+  const {
+    register,
+    setValue,
+    getValues,
+    trigger,
+    formState: { errors },
+    reset,
+  } = useForm({ defaultValues: initialValues });
 
+  // Fetch initial SEO data
+  useEffect(() => {
+    const fetchInitialData = async () => {
+          setLoading(true); // start loader
+      const fetchedData = {};
+      const keywords = {};
+      for (const page of pages) {
+        try {
+          const response = await requests.get(`/seo/${page}`);
+          fetchedData[page] = response?.data || {
+            metaTitle: "",
+            metaDescription: "",
+            metaKeywords: [],
+          };
+          keywords[page] = fetchedData[page]?.metaKeywords || [];
+        } catch {
+          fetchedData[page] = {
+            metaTitle: "",
+            metaDescription: "",
+            metaKeywords: [],
+          };
+          keywords[page] = [];
+        }
+      }
+      setInitialValues(fetchedData);
+      setKeywordsState(keywords);
+      reset(fetchedData);
+       setLoading(false); // stop loader
+    };
+    fetchInitialData();
+  }, []);
 
-        const [initialValues, setInitialValues] = useState({}); // State for initial values
+  // Handle update for a single page
+  const handleUpdate = (page) => async () => {
+    // Reset keywords error
+    setKeywordsErrors((prev) => ({ ...prev, [page]: false }));
 
-        useEffect(() => {
-                // Fetch initial SEO data (replace with your actual API call)
-                const fetchInitialData = async () => {
-                        const fetchedData = {};
-                        for (const page of pages) {
-                                // Replace with your actual API endpoint for each page
-                                const response = await requests.get(`/seo/${page}`); // Example API endpoint
-                                if (response.data) {
-                                        fetchedData[page] = response.data;
+    // Validate title & description
+    const isValid = await trigger(page);
+    if (!isValid) return notifyError("Please fill required fields");
 
-                                }
-                        }
-                        setInitialValues(fetchedData);
-                };
+    // Validate keywords
+    const currentKeywords = keywordsState[page] || [];
+    if (currentKeywords.length === 0) {
+      setKeywordsErrors((prev) => ({ ...prev, [page]: true }));
+      return notifyError("Please add at least one keyword");
+    }
 
-                fetchInitialData();
-        }, []);
+    try {
+      const values = getValues(page);
+      const response = await requests.post("/seo/add", { ...values, page });
+      if (response?.status === 200 || response?.status === 201) {
+        notifySuccess(response?.message || "SEO updated successfully");
+      }
+    } catch {
+      notifyError("Something went wrong!");
+    }
+  };
+if (loading) {
+  return (
+    <div className="flex items-center justify-center h-64 w-full">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500"></div>
+    </div>
+  );
+}
 
-        const handleUpdate = (page, trigger, getValues) => async () => {
-                const isValid = await trigger();
-                if (!isValid) {
-                        console.log("Form validation failed");
-                        return;
-                }
+  return (
+    <>
+      <PageTitle>{t("SEO Management")}</PageTitle>
 
-                const values = getValues();
-                // Make API call to update SEO metadata (send the entire 'values' object)
-                try {
-                        const response = await requests.post(`/seo/add`, { ...values[page], page });
-                        if (response?.status === 200) {
-                                notifySuccess(response?.message)
-                        }
-                        if (response.status === 201) {
-                                notifySuccess(response?.message)
-                        }
-                } catch (error) {
-                        notifyError("Something went wrong!");
+      <table className="min-w-full border-collapse border border-gray-300 shadow-lg rounded-lg overflow-hidden">
+        <thead className="bg-blue-100 text-blue-800">
+          <tr>
+            <th className="border p-3 text-left">Page</th>
+            <th className="border p-3 text-left">Meta Title</th>
+            <th className="border p-3 text-left">Meta Description</th>
+            <th className="border p-3 text-left">Meta Keywords</th>
+            <th className="border p-3 text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody className="bg-white">
+          {pages.map((page, idx) => (
+            <tr key={page} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+              <td className="border p-2 font-semibold capitalize text-gray-700">{page}</td>
 
-                        // console.error("Error updating SEO data:", error);
-                }
-        };
+              {/* Meta Title */}
+              <td className="border p-2">
+                <Input
+                  {...register(`${page}.metaTitle`, { required: "Meta Title is required!" })}
+                  placeholder="Meta Title"
+                  className="border-gray-300 focus:border-blue-400 focus:ring focus:ring-blue-200"
+                />
+                {errors[page]?.metaTitle && (
+                  <span className="text-red-500 text-sm">{errors[page]?.metaTitle?.message}</span>
+                )}
+              </td>
 
-        return (
-                <>
-                        <PageTitle>{t("SEO Management")}</PageTitle>
-                        {pages.map((page, index) => {
-                                const [defaultKeyWords, setDefaultKeyWords] = useState({ [page]: initialValues[page]?.metaKeywords || [] })
-                                const defaultValuesForPage = initialValues[page] || {
-                                        metaTitle: "",
-                                        metaDescription: "",
-                                        metaKeywords: [],
-                                };
+              {/* Meta Description */}
+              <td className="border p-2">
+                <Textarea
+                  {...register(`${page}.metaDescription`, { required: "Meta Description is required!" })}
+                  placeholder="Meta Description"
+                  rows={2}
+                  className="border-gray-300 focus:border-blue-400 focus:ring focus:ring-blue-200"
+                />
+                {errors[page]?.metaDescription && (
+                  <span className="text-red-500 text-sm">{errors[page]?.metaDescription?.message}</span>
+                )}
+              </td>
 
+              {/* Meta Keywords */}
+              <td className="border p-2">
+                <ReactTagInput
+                  placeholder="Meta Keywords"
+                  tags={keywordsState[page] || []}
+                  onChange={(newTags) => {
+                    setKeywordsState((prev) => ({ ...prev, [page]: newTags }));
+                    setValue(`${page}.metaKeywords`, newTags);
+                    if (newTags.length > 0) {
+                      setKeywordsErrors((prev) => ({ ...prev, [page]: false }));
+                    }
+                  }}
+                />
+                {keywordsErrors[page] && (
+                  <span className="text-red-500 text-sm">Please add at least one keyword</span>
+                )}
+              </td>
 
-                                const {
-                                        register,
-                                        handleSubmit,
-                                        setValue,
-                                        getValues,
-                                        formState: { errors },
-                                        trigger,
-                                        reset, // Add reset function
-                                } = useForm({
-                                        defaultValues: {
-                                                [page]: defaultValuesForPage,
-                                        },
-                                });
-
-                                useEffect(() => {
-                                        // Reset the form when initialValues changes for this page
-                                        reset({ [page]: defaultValuesForPage });
-                                }, [initialValues[page], reset, page]);
-
-                                return (
-                                        <div key={`${page}-${index}`} className="mb-6">
-                                                <PageTitle className="capitalize">{page.toUpperCase()}</PageTitle>
-                                                <form onSubmit={handleSubmit(handleUpdate(page, trigger, getValues))}>
-                                                        {/* ... (Meta Title and Meta Description remain the same) */}
-                                                        {/* Meta Title */}
-
-                                                        <div className="grid grid-cols-6 gap-3 md:gap-5 xl:gap-6 lg:gap-6 mb-6">
-
-                                                                <LabelArea label={"Meta Title"} />
-
-                                                                <div className="col-span-8 sm:col-span-4">
-
-                                                                        <Input
-
-                                                                                {...register(`${page}.metaTitle`, { required: "Meta Title is required!" })}
-
-
-
-                                                                                name={`${page}.metaTitle`} // Ensure the name includes the page to scope correctly
-
-                                                                                type="text"
-
-                                                                                placeholder={"Meta Title"}
-
-                                                                                className={errors[`${page}.metaTitle`] && "border-red-500"}
-
-                                                                        />
-
-
-
-                                                                        {errors[page] && errors[page]?.metaTitle && (
-
-                                                                                <span className="text-red-500 text-sm">
-
-                                                                                        {errors[page]?.metaTitle?.message}
-
-                                                                                </span>
-
-                                                                        )}
-
-                                                                </div>
-
-                                                        </div>
-
-
-
-
-
-                                                        {/* Meta Description */}
-
-                                                        <div className="grid grid-cols-6 gap-3 md:gap-5 xl:gap-6 lg:gap-6 mb-6">
-
-                                                                <LabelArea label={"Meta Description"} />
-
-                                                                <div className="col-span-8 sm:col-span-4">
-
-                                                                        <Textarea
-
-                                                                                {...register(`${page}.metaDescription`, {
-
-                                                                                        required: "Meta Description is required!",
-
-                                                                                })}
-
-                                                                                className={`border text-sm block w-full bg-gray-100 ${errors[`${page}.metaDescription`] && "border-red-500"
-
-                                                                                        }`}
-
-                                                                                name={`${page}.metaDescription`} // Ensure the name includes the page to scope correctly
-
-                                                                                placeholder={"Meta Description"}
-
-                                                                                rows="2"
-
-                                                                                spellCheck="false"
-
-                                                                        />
-
-                                                                        {errors[page] && errors[page]?.metaDescription && (
-
-                                                                                <span className="text-red-500 text-sm">
-
-                                                                                        {errors[page]?.metaDescription?.message}
-
-                                                                                </span>
-
-                                                                        )}
-
-                                                                </div>
-
-                                                        </div>
-                                                        {/* Meta Keywords */}
-                                                        <div className="grid grid-cols-6 gap-3 md:gap-5 xl:gap-6 lg:gap-6 mb-6">
-                                                                <LabelArea label={"Meta Keywords"} />
-                                                                <div className="col-span-8 sm:col-span-4">
-
-                                                                        <ReactTagInput
-                                                                                placeholder={"Meta Keywords"}
-                                                                                tags={initialValues[page]?.metaKeywords || defaultKeyWords[page] || []}
-                                                                                onChange={(newMetaKeywords) => {
-                                                                                        setDefaultKeyWords(prev => ({
-                                                                                                ...prev,
-                                                                                                [page]: newMetaKeywords // Merge arrays properly
-                                                                                        }));
-                                                                                        setValue(`${page}.metaKeywords`, newMetaKeywords);
-                                                                                }}
-                                                                        />
-                                                                </div>
-                                                        </div>
-
-                                                        {/* Update Button */}
-                                                        <div className="text-right">
-                                                                <Button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                                                                        Save Changes
-                                                                </Button>
-                                                        </div>
-                                                </form>
-                                        </div>
-                                );
-                        })}
-                </>
-        );
+              {/* Action */}
+              <td className="border p-2 text-center">
+                <Button
+                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  onClick={handleUpdate(page)}
+                >
+                  Save
+                </Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
+  );
 };
 
 export default SEO;
