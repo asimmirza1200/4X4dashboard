@@ -184,7 +184,7 @@ const ProductTable = ({ products, isCheck, setIsCheck }) => {
               : 'on_backorder';
 
           return (
-            <TableRow key={i + 1} className="group">
+            <TableRow key={i + 1} className="group ">
               {/* Checkbox */}
               <TableCell className="w-12">
                 <CheckBox
@@ -231,7 +231,7 @@ const ProductTable = ({ products, isCheck, setIsCheck }) => {
               </TableCell>
 
               {/* Name with Row Actions */}
-              <TableCell className="w-48 min-w-[180px] max-w-[200px]">
+              <TableCell className="w-48 min-w-[180px] max-w-[200px">
                 <div className="flex items-center gap-2">
                   <div className="flex-1 min-w-0">
                     <h2
@@ -245,7 +245,7 @@ const ProductTable = ({ products, isCheck, setIsCheck }) => {
                     )}
                   </div>
                   {/* Phase 4: Row Actions Menu */}
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                  <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                     <ProductRowActions
                       product={product}
                       onEdit={() => handleEdit(product)}
