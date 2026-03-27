@@ -19,21 +19,25 @@ import { FiPlus } from "react-icons/fi";
 
 import useAsync from "@/hooks/useAsync";
 import useFilter from "@/hooks/useFilter";
+import usePermissions from "@/hooks/usePermissions";
 import MainDrawer from "@/components/drawer/MainDrawer";
 import StaffDrawer from "@/components/drawer/StaffDrawer";
 import TableLoading from "@/components/preloader/TableLoading";
 import StaffTable from "@/components/staff/StaffTable";
 import NotFound from "@/components/table/NotFound";
 import PageTitle from "@/components/Typography/PageTitle";
+import PermissionWrapper from "@/components/auth/PermissionWrapper";
 import { AdminContext } from "@/context/AdminContext";
 import { SidebarContext } from "@/context/SidebarContext";
 import AdminServices from "@/services/AdminServices";
 import AnimatedContent from "@/components/common/AnimatedContent";
+import { ROLES } from "@/utils/permissions";
 
 const Staff = () => {
   const { state } = useContext(AdminContext);
   const { adminInfo } = state;
   const { toggleDrawer, lang } = useContext(SidebarContext);
+  const { can } = usePermissions();
 
   const { data, loading, error } = useAsync(() =>
     AdminServices.getAllStaff({ email: adminInfo.email })
@@ -89,23 +93,25 @@ const Staff = () => {
                   <option value="All" defaultValue hidden>
                     {t("StaffRole")}
                   </option>
-                  <option value="Admin">{t("StaffRoleAdmin")}</option>
-                  <option value="Cashier">{t("SelectCashiers")}</option>
-                  <option value="Super Admin">{t("SelectSuperAdmin")}</option>
+                  <option value={ROLES.ADMIN}>{t("StaffRoleAdmin")}</option>
+                  <option value={ROLES.MANAGER}>{t("StaffRoleManager") || "Manager"}</option>
+                  <option value={ROLES.STAFF}>{t("StaffRoleStaff") || "Staff"}</option>
                 </Select>
               </div>
 
-              <div className="w-full md:w-56 lg:w-56 xl:w-56">
-                <Button
-                  onClick={toggleDrawer}
-                  className="w-full rounded-md h-12"
-                >
-                  <span className="mr-3">
-                    <FiPlus />
-                  </span>
-                  {t("AddStaff")}
-                </Button>
-              </div>
+              <PermissionWrapper permission="add_staff">
+                <div className="w-full md:w-56 lg:w-56 xl:w-56">
+                  <Button
+                    onClick={toggleDrawer}
+                    className="w-full rounded-md h-12"
+                  >
+                    <span className="mr-3">
+                      <FiPlus />
+                    </span>
+                    {t("AddStaff")}
+                  </Button>
+                </div>
+              </PermissionWrapper>
               <div className="mt-2 md:mt-0 flex items-center xl:gap-x-4 gap-x-1 flex-grow-0 md:flex-grow lg:flex-grow xl:flex-grow">
                 <div className="w-full mx-1">
                   <Button type="submit" className="h-12 w-full bg-emerald-700">

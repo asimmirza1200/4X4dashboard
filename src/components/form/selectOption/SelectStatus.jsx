@@ -16,7 +16,7 @@ const SelectStatus = ({ id, order }) => {
         notifySuccess(res.message);
         setIsUpdate(true);
       })
-      .catch((err) => notifyError(err.message));
+      .catch((err) => notifyError(err.response.data.message));
   };
 
   return (

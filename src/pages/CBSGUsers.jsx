@@ -45,7 +45,7 @@ const CBSGUsers = () => {
       search: searchText || "",
     })
   );
-
+  console.log("error",error)
   const users = data?.users || [];
   const totalResults = data?.totalDocs || 0;
   const totalPages = data?.totalPages || 1;
@@ -99,7 +99,7 @@ const CBSGUsers = () => {
               <TableLoading />
             ) : error ? (
               <span className="text-center text-xl text-red-500">
-                {error?.message || "Failed to load users"}
+                {error}
               </span>
             ) : users.length === 0 ? (
               <NotFound title="No pending users found" />

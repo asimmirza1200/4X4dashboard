@@ -67,7 +67,8 @@ const useAsync = (asyncFunction, dependencies = null) => {
             // Request was cancelled, don't set error
             setLoading(false);
           } else {
-            setError(err.message || "An error occurred");
+            console.log("err.message",err)
+            setError(err.response.data.message || "An error occurred");
             setLoading(false);
             setData([]);
           }

@@ -18,9 +18,11 @@ import { useTranslation } from "react-i18next";
 // Internal imports
 import { notifyError, notifySuccess } from "@/utils/toast";
 import useAsync from "@/hooks/useAsync";
+import usePermissions from "@/hooks/usePermissions";
 import OrderServices from "@/services/OrderServices";
 import NotFound from "@/components/table/NotFound";
 import PageTitle from "@/components/Typography/PageTitle";
+import PermissionWrapper from "@/components/auth/PermissionWrapper";
 import { SidebarContext } from "@/context/SidebarContext";
 import TableLoading from "@/components/preloader/TableLoading";
 import spinnerLoadingImage from "@/assets/img/spinner.gif";
@@ -38,6 +40,7 @@ import OMSTable from "@/components/oms/OMSTable";
 
 const Orders = () => {
   const { t } = useTranslation();
+  const { can } = usePermissions();
   const {
     currentPage,
     setCurrentPage,
@@ -131,7 +134,7 @@ const Orders = () => {
       isUpdate,
     ]
   );
-
+    console.log("error",error)
   // Reset selected orders when data changes
   useEffect(() => {
     setSelectedOrders([]);
@@ -245,7 +248,7 @@ const Orders = () => {
   };
 
   return (
-    <>
+    <PermissionWrapper permission="view_orders" fallback={<NotFound title="Access Denied" />}>
       <PageTitle>{t("Orders")}</PageTitle>
 
       <AnimatedContent>
@@ -512,7 +515,7 @@ const Orders = () => {
           order={quickViewOrder}
         />
       </AnimatedContent>
-    </>
+    </PermissionWrapper>
   );
 };
 

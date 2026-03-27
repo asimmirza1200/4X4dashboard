@@ -1,11 +1,12 @@
 import React from "react";
 import { Select } from "@windmill/react-ui";
+import { ROLES } from "@/utils/permissions";
 
 const SelectRole = ({ setRole, register, name, label }) => {
   return (
     <>
       <Select
-        onChange={(e) => setRole(e.target.value)}
+        onChange={(e) => setRole && setRole(e.target.value)}
         name={name}
         {...register(`${name}`, {
           required: `${label} is required!`,
@@ -14,13 +15,9 @@ const SelectRole = ({ setRole, register, name, label }) => {
         <option value="" defaultValue hidden>
           Staff role
         </option>
-        <option value="Admin">Admin</option>
-        <option value="CEO">CEO</option>
-        <option value="Manager">Manager</option>
-        <option value="Accountant">Accountant</option>
-        <option value="Driver"> Driver </option>
-        <option value="Security Guard">Security Guard</option>
-        <option value="Deliver Person">Delivery Person</option>
+        <option value={ROLES.ADMIN}>{ROLES.ADMIN}</option>
+        <option value={ROLES.MANAGER}>{ROLES.MANAGER}</option>
+        <option value={ROLES.STAFF}>{ROLES.STAFF}</option>
       </Select>
     </>
   );

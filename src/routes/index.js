@@ -36,6 +36,7 @@ const CBSGBuildDetail = lazy(() => import("@/pages/CBSGBuildDetail"));
 const CBSGUsers = lazy(() => import("@/pages/CBSGUsers"));
 const CBSGModeration = lazy(() => import("@/pages/CBSGModeration"));
 const CBSGSettings = lazy(() => import("@/pages/CBSGSettings"));
+const PermissionTest = lazy(() => import("@/components/test/PermissionTestSimple"));
 /*
 //  * ⚠ These are internal routes!
 //  * They will be rendered inside the app, using the default `containers/Layout`.
@@ -178,6 +179,10 @@ const routes = [
   {
     path: "/cbsg/settings",
     component: CBSGSettings,
+  },
+  {
+    path: "/test-permissions",
+    component: PermissionTest,
   },
 ];
 

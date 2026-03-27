@@ -22,6 +22,7 @@ import exportFromJSON from "export-from-json";
 
 import useAsync from "@/hooks/useAsync";
 import useToggleDrawer from "@/hooks/useToggleDrawer";
+import usePermissions from "@/hooks/usePermissions";
 import NotFound from "@/components/table/NotFound";
 import ProductServices from "@/services/ProductServices";
 import PageTitle from "@/components/Typography/PageTitle";
@@ -43,6 +44,7 @@ import AnimatedContent from "@/components/common/AnimatedContent";
 import BulkActionsDropdown from "@/components/product/BulkActionsDropdown";
 import ProductCardMobile from "@/components/product/ProductCardMobile";
 import FiltersDrawer from "@/components/product/FiltersDrawer";
+import PermissionWrapper from "@/components/auth/PermissionWrapper";
 import { FiFilter } from "react-icons/fi";
 
 const Products = () => {
@@ -50,6 +52,7 @@ const Products = () => {
     useToggleDrawer();
 
   const { t } = useTranslation();
+  const { can } = usePermissions();
   const {
     toggleDrawer,
     lang,
@@ -464,53 +467,55 @@ const Products = () => {
               <div className="flex-grow-0 sm:flex-grow md:flex-grow lg:flex-grow xl:flex-grow">
                 {/* Import functionality only - export removed */}
                 <div className="flex flex-col">
-                  <button
-                    onClick={() => setIsImportBoxShown(!isImportBoxShown)}
-                    className="border flex justify-center items-center h-10 w-20 hover:text-yellow-400 border-gray-300 dark:text-gray-300 cursor-pointer py-2 hover:border-yellow-400 rounded-md focus:outline-none"
-                  >
-                    <FiDownload className="mr-2" />
-                    <span className="text-xs">{t("Import")}</span>
-                  </button>
-                  {/* Import box */}
-                  {isImportBoxShown && (
-                    <div className="w-full my-2 lg:my-0 md:my-0 flex flex-col sm:flex-row gap-2">
-                      <div className="h-10 border border-dashed border-emerald-500 rounded-md flex-1">
-                        <label htmlFor="import-file-input" className="w-full rounded-lg h-10 flex justify-center items-center text-xs dark:text-gray-400 leading-none cursor-pointer">
-                          <Input
-                            disabled={isDisabled}
-                            type="file"
-                            accept=".csv,.xls,.json"
-                            onChange={handleSelectFile}
-                            className="hidden"
-                            id="import-file-input"
-                          />
-                          {filename ? (
-                            <span className="px-2">{filename}</span>
-                          ) : (
-                            <span className="mx-2 text-emerald-500 text-lg dark:text-gray-400">
-                              {t("SelectYourJSON/CSV")} {t("File")}
-                            </span>
-                          )}
-                        </label>
-                      </div>
-                      {filename && (
-                        <button
-                          onClick={handleRemoveSelectFile}
-                          className="text-red-500 hover:text-red-700 text-lg px-2"
-                          type="button"
+                  <PermissionWrapper permission="upload_csv">
+                    <button
+                      onClick={() => setIsImportBoxShown(!isImportBoxShown)}
+                      className="border flex justify-center items-center h-10 w-20 hover:text-yellow-400 border-gray-300 dark:text-gray-300 cursor-pointer py-2 hover:border-yellow-400 rounded-md focus:outline-none"
+                    >
+                      <FiDownload className="mr-2" />
+                      <span className="text-xs">{t("Import")}</span>
+                    </button>
+                    {/* Import box */}
+                    {isImportBoxShown && (
+                      <div className="w-full my-2 lg:my-0 md:my-0 flex flex-col sm:flex-row gap-2">
+                        <div className="h-10 border border-dashed border-emerald-500 rounded-md flex-1">
+                          <label htmlFor="import-file-input" className="w-full rounded-lg h-10 flex justify-center items-center text-xs dark:text-gray-400 leading-none cursor-pointer">
+                            <Input
+                              disabled={isDisabled}
+                              type="file"
+                              accept=".csv,.xls,.json"
+                              onChange={handleSelectFile}
+                              className="hidden"
+                              id="import-file-input"
+                            />
+                            {filename ? (
+                              <span className="px-2">{filename}</span>
+                            ) : (
+                              <span className="mx-2 text-emerald-500 text-lg dark:text-gray-400">
+                                {t("SelectYourJSON/CSV")} {t("File")}
+                              </span>
+                            )}
+                          </label>
+                        </div>
+                        {filename && (
+                          <button
+                            onClick={handleRemoveSelectFile}
+                            className="text-red-500 hover:text-red-700 text-lg px-2"
+                            type="button"
+                          >
+                            ×
+                          </button>
+                        )}
+                        <Button
+                          onClick={handleUploadMultiple}
+                          className="h-10 px-4"
+                          disabled={!filename}
                         >
-                          ×
-                        </button>
-                      )}
-                      <Button
-                        onClick={handleUploadMultiple}
-                        className="h-10 px-4"
-                        disabled={!filename}
-                      >
-                        <span className="text-xs">{t("ImportNow")}</span>
-                      </Button>
-                    </div>
-                  )}
+                          <span className="text-xs">{t("ImportNow")}</span>
+                        </Button>
+                      </div>
+                    )}
+                  </PermissionWrapper>
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row gap-4">
@@ -564,17 +569,19 @@ const Products = () => {
                     </option>
                   </select>
                 </div>
-                <div className="flex-grow-0 md:flex-grow lg:flex-grow xl:flex-grow">
-                  <Button
-                    onClick={toggleDrawer}
-                    className="w-full rounded-md h-12 min-h-[48px] touch-manipulation"
-                  >
-                    <span className="mr-2">
-                      <FiPlus />
-                    </span>
-                    {t("AddProduct")}
-                  </Button>
-                </div>
+                <PermissionWrapper permission="add_products">
+                  <div className="flex-grow-0 md:flex-grow lg:flex-grow xl:flex-grow">
+                    <Button
+                      onClick={toggleDrawer}
+                      className="w-full rounded-md h-12 min-h-[48px] touch-manipulation"
+                    >
+                      <span className="mr-2">
+                        <FiPlus />
+                      </span>
+                      {t("AddProduct")}
+                    </Button>
+                  </div>
+                </PermissionWrapper>
               </div>
             </form>
           </CardBody>

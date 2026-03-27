@@ -63,7 +63,7 @@ const CBSGSettings = () => {
               <TableLoading />
             ) : error ? (
               <span className="text-center text-xl text-red-500">
-                {error?.message || "Failed to load settings"}
+                {error || "Failed to load settings"}
               </span>
             ) : (
               <div className="space-y-6">
