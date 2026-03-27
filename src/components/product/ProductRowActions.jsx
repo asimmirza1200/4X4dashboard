@@ -1,7 +1,8 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { FiEdit, FiCopy, FiTrash2, FiEye, FiMoreVertical } from "react-icons/fi";
 import { createPortal } from "react-dom";
+
 const ProductRowActions = ({
   product,
   onEdit,
@@ -11,87 +12,88 @@ const ProductRowActions = ({
   onTrash,
 }) => {
   const { t } = useTranslation();
+  const buttonRef = useRef();
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState(null);
-const buttonRef = React.useRef();
-
-  const handleClick = (e) => {
-    e.stopPropagation();
-    const rect = buttonRef.current.getBoundingClientRect();
-
-  setPosition({
-    top: rect.bottom + window.scrollY,
-    left: rect.right + window.scrollX - 200, // adjust width
-  });
-
-    setIsOpen(!isOpen);
-  };
+  const [isHovering, setIsHovering] = useState(false); // track hover over button/dropdown
 
   const handleAction = (action) => {
     setIsOpen(false);
     action();
   };
 
-  useEffect(() => {
-  const handleOutsideClick = (e) => {
-    // if click is NOT on button AND NOT inside dropdown → close
-    if (!buttonRef.current?.contains(e.target)) {
-      setIsOpen(false);
+  // Update dropdown position
+  const updatePosition = () => {
+    const rect = buttonRef.current.getBoundingClientRect();
+    const dropdownHeight = 250; // adjust based on your dropdown content
+    const viewportHeight = window.innerHeight;
+
+    let top = rect.bottom + window.scrollY + 4; // default below
+    if (rect.bottom + dropdownHeight > viewportHeight) {
+      top = rect.top + window.scrollY - dropdownHeight - 4; // show above if overflow
     }
+
+    setPosition({
+      top,
+      left: rect.right + window.scrollX - 200,
+    });
   };
 
-  if (isOpen) {
-    document.addEventListener("click", handleOutsideClick);
-  }
+  // Hover logic: show when hovering button or dropdown
+  useEffect(() => {
+    if (isHovering) {
+      updatePosition();
+      setIsOpen(true);
+    } else {
+      // slight delay to avoid flicker
+      const timeout = setTimeout(() => setIsOpen(false), 100);
+      return () => clearTimeout(timeout);
+    }
+  }, [isHovering]);
 
-  return () => {
-    document.removeEventListener("click", handleOutsideClick);
-  };
-}, [isOpen]);
-
-const handleMouseEnter = () => {
-  const rect = buttonRef.current.getBoundingClientRect();
-
-  setPosition({
-    top: rect.bottom + window.scrollY + 4,
-    left: rect.right + window.scrollX - 200,
-  });
-
-  setIsOpen(true);
-};
+  // Click outside to close
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (!buttonRef.current?.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) document.addEventListener("click", handleOutsideClick);
+    return () => document.removeEventListener("click", handleOutsideClick);
+  }, [isOpen]);
 
   return (
     <div className="relative inline-block">
-      {/* Hover trigger - shows on hover over product name */}
+      {/* Button */}
       <div
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
         className="relative"
-        onMouseEnter={handleMouseEnter}
-  onMouseLeave={() => setIsOpen(false)}
       >
         <button
-        ref={buttonRef}
+          ref={buttonRef}
           type="button"
-
           className="p-1 text-gray-400 hover:text-emerald-600 focus:outline-none transition-colors"
         >
           <FiMoreVertical className="w-4 h-4" />
         </button>
+      </div>
 
-        {/* Dropdown menu */}
-        {isOpen && (
-            createPortal(
+      {/* Dropdown */}
+      {isOpen &&
+        createPortal(
           <div
-          onClick={(e) => e.stopPropagation()}
-           style={{
-    position: "absolute",
-    top: position?.top,
-    left: position?.left,
-    width: "200px",
-  }}
-           className="bg-white dark:bg-gray-800 rounded-md shadow-lg z-[9999] border border-gray-200 dark:border-gray-700"
+            onMouseEnter={() => setIsHovering(true)}
+            onMouseLeave={() => setIsHovering(false)}
+            style={{
+              position: "absolute",
+              top: position?.top,
+              left: position?.left,
+              width: "200px",
+            }}
+            className="bg-white dark:bg-gray-800 rounded-md shadow-lg z-[9999] border border-gray-200 dark:border-gray-700"
           >
             <div className="py-1">
-              {/* Edit */}
               <button
                 type="button"
                 onClick={() => handleAction(onEdit)}
@@ -101,7 +103,6 @@ const handleMouseEnter = () => {
                 {t("Edit")}
               </button>
 
-              {/* Quick Edit */}
               <button
                 type="button"
                 onClick={() => handleAction(onQuickEdit)}
@@ -111,7 +112,6 @@ const handleMouseEnter = () => {
                 {t("Quick Edit")}
               </button>
 
-              {/* View Product */}
               <button
                 type="button"
                 onClick={() => handleAction(onView)}
@@ -121,7 +121,6 @@ const handleMouseEnter = () => {
                 {t("View Product")}
               </button>
 
-              {/* Duplicate */}
               <button
                 type="button"
                 onClick={() => handleAction(onDuplicate)}
@@ -131,10 +130,8 @@ const handleMouseEnter = () => {
                 {t("Duplicate")}
               </button>
 
-              {/* Divider */}
               <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
 
-              {/* Move to Trash */}
               <button
                 type="button"
                 onClick={() => handleAction(onTrash)}
@@ -144,15 +141,11 @@ const handleMouseEnter = () => {
                 {t("Move to Trash")}
               </button>
             </div>
-          </div>
-          ,
-    document.body
-  )
+          </div>,
+          document.body
         )}
-      </div>
     </div>
   );
 };
 
 export default ProductRowActions;
-
