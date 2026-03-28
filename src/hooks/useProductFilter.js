@@ -2,6 +2,8 @@
 import Ajv from "ajv";
 import csvToJson from "csvtojson";
 import { useContext, useState } from "react";
+import axios from "axios";
+import Cookies from "js-cookie";
 
 //internal import
 import { SidebarContext } from "@/context/SidebarContext";
@@ -59,6 +61,108 @@ const schema = {
   required: ["prices", "title"],
 };
 
+// Helper function to process and upload images during import
+const processImportImages = async (imageUrls) => {
+  console.log("Processing images:", imageUrls);
+  
+  if (!Array.isArray(imageUrls) || imageUrls.length === 0) {
+    console.log("No images to process");
+    return [];
+  }
+
+  const baseURL = import.meta.env.VITE_APP_API_BASE_URL || 'http://localhost:5055/api';
+  const serverURL = baseURL.endsWith('/api') ? baseURL.slice(0, -4) : baseURL;
+  
+  console.log("Base URL:", baseURL);
+  console.log("Server URL:", serverURL);
+  
+  let adminInfo;
+  if (Cookies.get("adminInfo")) {
+    adminInfo = JSON.parse(Cookies.get("adminInfo"));
+    console.log("Admin info found:", adminInfo ? "Yes" : "No");
+  } else {
+    console.log("No admin info found in cookies");
+  }
+
+  const processedImages = [];
+
+  for (const imageUrl of imageUrls) {
+    console.log("Processing image URL:", imageUrl);
+    
+    // Skip empty or invalid URLs
+    if (!imageUrl || typeof imageUrl !== 'string') {
+      console.log("Skipping invalid URL:", imageUrl);
+      continue;
+    }
+
+    // During import, always upload images even if they're from our server
+    // This ensures images are properly stored in upload folder
+    if (imageUrl.startsWith('http')) {
+      console.log("Image URL detected, downloading and uploading to server:", imageUrl);
+      try {
+        // Download the image from URL with proper headers to avoid CORS
+        const response = await axios.get(imageUrl, { 
+          responseType: 'arraybuffer',
+          timeout: 10000, // 10 second timeout
+          headers: {
+            'Accept': 'image/*',
+            'Cache-Control': 'no-cache'
+          }
+        });
+        
+        console.log("Downloaded image successfully, size:", response.data.byteLength);
+        
+        // Create a blob from the response data
+        const blob = new Blob([response.data], { 
+          type: response.headers['content-type'] || 'image/jpeg' 
+        });
+        
+        // Create FormData and upload to our server
+        const formData = new FormData();
+        formData.append('images', blob, `imported-image-${Date.now()}.jpg`);
+
+        console.log("Uploading to server...");
+        const uploadResponse = await axios({
+          url: `${baseURL}/upload/images`,
+          method: "POST",
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: adminInfo ? `Bearer ${adminInfo.token}` : null,
+          },
+          data: formData,
+          timeout: 15000 // 15 second timeout
+        });
+
+        console.log("Upload response:", uploadResponse.data);
+
+        const uploadedUrl = uploadResponse?.data?.files?.[0]?.url || uploadResponse?.data?.url;
+        if (uploadedUrl) {
+          const fullUrl = uploadedUrl.startsWith('http') ? uploadedUrl : `${serverURL}${uploadedUrl}`;
+          processedImages.push(fullUrl);
+          console.log(`Successfully uploaded image: ${imageUrl} -> ${fullUrl}`);
+        }
+      } catch (error) {
+        console.error(`Failed to upload image ${imageUrl}:`, error);
+        console.error("Error details:", error.response?.data || error.message);
+        // For CORS errors, keep the original URL as fallback
+        if (error.message.includes('CORS') || error.message.includes('Network Error')) {
+          console.log("CORS/Network error detected, keeping original URL as fallback");
+          processedImages.push(imageUrl);
+        } else {
+          processedImages.push(imageUrl);
+        }
+      }
+    } else {
+      // For relative paths that aren't uploads, construct full URL
+      console.log("Relative path detected, constructing full URL:", imageUrl);
+      processedImages.push(`${serverURL}${imageUrl}`);
+    }
+  }
+
+  console.log("Final processed images:", processedImages);
+  return processedImages;
+};
+
 const useProductFilter = (data) => {
   const ajv = new Ajv({ allErrors: true });
   const { setLoading, setIsUpdate } = useContext(SidebarContext);
@@ -106,9 +210,10 @@ const useProductFilter = (data) => {
     if (file && file.type === "application/json") {
       setFileName(file?.name);
       setIsDisable(true);
+      notifySuccess("Processing JSON file and uploading images...");
 
       fileReader.readAsText(file, "UTF-8");
-      fileReader.onload = (e) => {
+      fileReader.onload = async (e) => {
         console.log("JSON file loaded successfully");
         console.log("Raw file content:", e.target.result);
         
@@ -116,34 +221,43 @@ const useProductFilter = (data) => {
           const text = JSON.parse(e.target.result);
           console.log("Parsed JSON:", text);
 
-          const productData = text.map((value) => {
-          console.log("Mapping value:", value);
-          return {
-            categories: value.categories,
-            image: value.image,
-            barcode: value.barcode,
-            tag: value.tag,
-            variants: value.variants,
-            status: value.status,
-            prices: value.prices,
-            isCombination: typeof value.isCombination === 'string' ? JSON.parse(value.isCombination.toLowerCase()) : Boolean(value.isCombination),
-            title: value.title,
-            productId: value.productId,
-            slug: value.slug,
-            sku: value.sku,
-            category: value.category ,
-            stock: value.stock,
-            description: value.description,
-            brand: value.brand || "",
-            weight: value.weight || "",
-            length: value.length || "",
-            width: value.width || "",
-            height: value.height || "",
-          };
-        });
+          // Process all products to handle image uploads
+          const productData = await Promise.all(
+            text.map(async (value) => {
+              console.log("Mapping value:", value);
+              
+              // Process images for this product
+              const processedImages = await processImportImages(value.image || []);
+              
+              return {
+                categories: value.categories,
+                image: processedImages,
+                barcode: value.barcode,
+                tag: value.tag,
+                variants: value.variants,
+                status: value.status,
+                prices: value.prices,
+                isCombination: typeof value.isCombination === 'string' ? JSON.parse(value.isCombination.toLowerCase()) : Boolean(value.isCombination),
+                isFeatured: value?.isFeatured === true || value?.isFeatured === "Yes" || true,
+                title: value.title,
+                productId: value.productId,
+                slug: value.slug,
+                sku: value.sku,
+                category: value.category ,
+                stock: value.stock,
+                description: value.description,
+                brand: value.brand || "",
+                weight: value.weight || "",
+                length: value.length || "",
+                width: value.width || "",
+                height: value.height || "",
+              };
+            })
+          );
         console.log("Final productData:", productData);
         // console.log("productData", productData);
         setSelectedFile(productData);
+        notifySuccess(`Successfully processed ${productData.length} products with images!`);
         } catch (error) {
           console.error("Error parsing JSON:", error);
           notifyError("Error parsing JSON file: " + error.message);
@@ -153,6 +267,7 @@ const useProductFilter = (data) => {
       console.log("CSV file detected, processing...");
       setFileName(file?.name);
       setIsDisable(true);
+      notifySuccess("Processing CSV file and uploading images...");
 
       fileReader.onload = async (event) => {
         try {
@@ -162,40 +277,55 @@ const useProductFilter = (data) => {
           
           const json = await csvToJson().fromString(text);
           console.log("Converted CSV to JSON:", json);
+          console.log("CSV - Number of products to process:", json.length);
           
-        const productData = json.map((value) => {
-          console.log("brand",value.Brand)
-          return {
-            image: value.Images || value.images ? (value.Images || value.images).split("|").map(img => img.trim()).filter(img => img) : [],
-            tag: value.Tags || value.tags ? (value.Tags || value.tags).split("|").map(tag => tag.trim()).filter(tag => tag) : [],
-            prices: {
-              originalPrice: Number(value?.Price || value?.price) || 0,
-              price: Number(value?.Price || value?.price) || 0,
-              discount: 0,
-              tradePrice: 0,
-            },
-            isCombination: false,
-            title: {
-              en: value?.Name || value?.name || value?.["Product name"] || value?.["product name"] || "",
-            },
+        // Process all products to handle image uploads
+        const productData = await Promise.all(
+          json.map(async (value) => {
+            console.log("brand",value.Brand)
+            console.log("Featured value:", value?.Featured, "featured value:", value?.featured)
+            console.log("Featured type:", typeof value?.Featured, "featured type:", typeof value?.featured)
             
-            weight: value?.Weight || value?.weight || "",
-            productId: value?.ID || value?.id || value?.Id || "",
-            slug: `product-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            sku: value?.SKU || value?.sku || "",
-            stock: Number(value?.Stock) || 10,
-            description: {
-              en: value?.Description || value?.description || "",
-            },
-            // ✅ FIX HERE
+            // Process images from CSV
+            const imageUrls = value.Images || value.images ? (value.Images || value.images).split("|").map(img => img.trim()).filter(img => img) : [];
+            console.log("CSV - Raw image URLs:", imageUrls);
+            console.log("CSV - About to call processImportImages");
+            const processedImages = await processImportImages(imageUrls);
+            console.log("CSV - Processed images:", processedImages);
+            
+            return {
+              image: processedImages,
+              tag: value.Tags || value.tags ? (value.Tags || value.tags).split("|").map(tag => tag.trim()).filter(tag => tag) : [],
+              prices: {
+                originalPrice: Number(value?.Price || value?.price) || 0,
+                price: Number(value?.Price || value?.price) || 0,
+                discount: 0,
+                tradePrice: 0,
+              },
+              isCombination: false,
+              title: {
+                en: value?.Name || value?.name || value?.["Product name"] || value?.["product name"] || "",
+              },
+              
+              weight: value?.Weight || value?.weight || "",
+              productId: value?.ID || value?.id || value?.Id || "",
+              slug: `product-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              sku: value?.SKU || value?.sku || "",
+              stock: Number(value?.Stock) || 10,
+              description: {
+                en: value?.Description || value?.description || "",
+              },
+              // ✅ FIX HERE
     brand: value?.Brand
       ? { name: value.Brand.trim() }
       : null,
-            isFeatured: value?.Featured === "Yes" || value?.featured === "Yes",
-          };
-        });
+              isFeatured: value?.Featured === "Yes" || value?.featured === "Yes" || value?.Featured === true || value?.featured === true || true,
+            };
+          })
+        );
 
         setSelectedFile(productData);
+        notifySuccess(`Successfully processed ${productData.length} products with images!`);
         } catch (error) {
           console.error("Error processing CSV:", error);
           notifyError("Error processing CSV file: " + error.message);
