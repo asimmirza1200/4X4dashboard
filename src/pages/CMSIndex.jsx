@@ -140,9 +140,7 @@ const CMSIndex = () => {
             Add New Page
           </Button>
         </div>
-      </div>
-
-      {/* Page Type Filter */}
+        {/* Page Type Filter */}
       <div className="mb-6">
         <Label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Filter by Page Type
@@ -160,6 +158,9 @@ const CMSIndex = () => {
           ))}
         </Select>
       </div>
+      </div>
+
+      
 
       {loading ? (
         <TableLoading row={12} col={8} width={140} height={20} />
