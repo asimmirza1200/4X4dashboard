@@ -23,6 +23,7 @@ const config = {
         xl: "600px",
       },
       width: {
+        50: "50px",
         80: "80px",
         100: "100px",
         200: "200px",

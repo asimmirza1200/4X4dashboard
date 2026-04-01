@@ -201,7 +201,7 @@ const CMSForm = ({ pageType, existingPage, onSave, onCancel }) => {
                 onClick={onCancel}
                 layout="outline"
                 size="icon"
-                className="text-gray-500 hover:text-gray-700 w-[50px]"
+                className="text-gray-500 hover:text-gray-700 w-50"
               >
                 <FiX className="text-black" />
               </Button>
@@ -249,7 +249,7 @@ const CMSForm = ({ pageType, existingPage, onSave, onCancel }) => {
                 onClick={onCancel}
                 layout="outline"
                 disabled={loading}
-                className="w-[100px]"
+                className="w-80"
               >
                 Cancel
               </Button>

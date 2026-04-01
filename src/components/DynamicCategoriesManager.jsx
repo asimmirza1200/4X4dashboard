@@ -62,7 +62,7 @@ const DynamicCategoriesManager = ({ categories, onChange }) => {
                   onClick={() => removeItem(index)}
                   size="small"
                   layout="outline"
-                  className="text-red-600 border-red-600 hover:bg-red-50 w-[50px]"
+                  className="text-red-600 border-red-600 hover:bg-red-50 w-50"
                 >
                   <FiTrash2 className="text-black"/>
                 </Button>
