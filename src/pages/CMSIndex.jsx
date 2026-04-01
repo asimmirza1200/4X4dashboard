@@ -124,41 +124,41 @@ const CMSIndex = () => {
   return (
     <>
 
-      <div className="flex justify-between items-center mb-6 mt-6">
-        <div>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 mt-6 gap-4">
+        <div className="w-full sm:w-auto">
           <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
             CMS Content Management
           </h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
             Manage all your website pages content including home, shop, and contact pages with full control over text, images, and form elements.
           </p>
         </div>
 
-        <div className="flex gap-3">
-          <Button onClick={handleAddNewPage} size="small" className="bg-blue-600 hover:bg-blue-700">
+        <div className="flex gap-3 w-full sm:w-auto">
+          <Button onClick={handleAddNewPage} size="small" className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
             <FiPlus className="mr-2" />
             Add New Page
           </Button>
         </div>
+      </div>
 
-        {/* Page Type Filter */}
-        <div className="mb-6">
-          <Label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Filter by Page Type
-          </Label>
-          <Select
-            value={selectedPageType}
-            onChange={(e) => setSelectedPageType(e.target.value)}
-            className="w-full md:w-64"
-          >
-            <option value="all">All Pages</option>
-            {Object.keys(cmsFormConfig).map(key => (
-              <option key={key} value={key}>
-                {cmsFormConfig[key].title}
-              </option>
-            ))}
-          </Select>
-        </div>
+      {/* Page Type Filter */}
+      <div className="mb-6">
+        <Label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Filter by Page Type
+        </Label>
+        <Select
+          value={selectedPageType}
+          onChange={(e) => setSelectedPageType(e.target.value)}
+          className="w-full sm:w-64"
+        >
+          <option value="all">All Pages</option>
+          {Object.keys(cmsFormConfig).map(key => (
+            <option key={key} value={key}>
+              {cmsFormConfig[key].title}
+            </option>
+          ))}
+        </Select>
       </div>
 
       {loading ? (
@@ -185,10 +185,10 @@ const CMSIndex = () => {
                     </div>
                   </div>
                   <div className="flex gap-2 ml-4">
-                    <Button onClick={() => handleEditPage(page)} size="icon" layout="outline" className="w-[50px]">
+                    <Button onClick={() => handleEditPage(page)} size="icon" layout="outline" className="w-50">
                       <FiEdit className="text-black" />
                     </Button>
-                    <Button onClick={() => handleDelete(page)} size="icon" layout="outline" className=" w-[50px]">
+                    <Button onClick={() => handleDelete(page)} size="icon" layout="outline" className=" w-50">
                       <FiTrash2 className="text-black" />
                     </Button>
                   </div>
