@@ -9,7 +9,8 @@ import {
   FiRss,
   FiTool,
   FiShield,
-  FiList
+  FiList,
+  FiFileText
 } from "react-icons/fi";
 
 /**
@@ -87,6 +88,11 @@ const sidebar = [
     path: "/pages",
     icon: FiList,
     name: "Pages",
+  },
+  {
+    path: "/cms",
+    icon: FiFileText,
+    name: "CMS Management",
   },
 
   {

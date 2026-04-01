@@ -31,6 +31,7 @@ const Notifications = lazy(() => import("@/pages/Notifications"));
 const SEO = lazy(() => import("@/pages/Seo"));
 const Blog = lazy(() => import("@/pages/Blogs"));
 const Pages = lazy(() => import("@/pages/Pages"));
+const CMSIndex = lazy(() => import("@/pages/CMSIndex"));
 const CBSGBuilds = lazy(() => import("@/pages/CBSGBuilds"));
 const CBSGBuildDetail = lazy(() => import("@/pages/CBSGBuildDetail"));
 const CBSGUsers = lazy(() => import("@/pages/CBSGUsers"));
@@ -80,6 +81,10 @@ const routes = [
   {
     path: "/pages",
     component: Pages,
+  },
+  {
+    path: "/cms",
+    component: CMSIndex,
   },
   {
     path: "/categories",
