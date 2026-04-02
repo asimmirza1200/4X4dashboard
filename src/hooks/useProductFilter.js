@@ -103,7 +103,7 @@ const processImportImages = async (imageUrls) => {
         // Download the image from URL with proper headers to avoid CORS
         const response = await axios.get(imageUrl, { 
           responseType: 'arraybuffer',
-          timeout: 10000, // 10 second timeout
+          timeout: 30000, // 30 second timeout for large images
           headers: {
             'Accept': 'image/*',
             'Cache-Control': 'no-cache'
@@ -130,7 +130,7 @@ const processImportImages = async (imageUrls) => {
             Authorization: adminInfo ? `Bearer ${adminInfo.token}` : null,
           },
           data: formData,
-          timeout: 15000 // 15 second timeout
+          timeout: 60000 // 60 second timeout for upload
         });
 
         console.log("Upload response:", uploadResponse.data);
@@ -279,15 +279,35 @@ const useProductFilter = (data) => {
           console.log("Converted CSV to JSON:", json);
           console.log("CSV - Number of products to process:", json.length);
           
-        // Process all products to handle image uploads
-        const productData = await Promise.all(
-          json.map(async (value) => {
+        // Process in batches to avoid timeout
+        const BATCH_SIZE = 50; // Process 50 products at a time
+        const batches = [];
+        for (let i = 0; i < json.length; i += BATCH_SIZE) {
+          batches.push(json.slice(i, i + BATCH_SIZE));
+        }
+        
+        console.log(`Processing ${batches.length} batches of ${BATCH_SIZE} products each`);
+        
+        let allProductData = [];
+        
+        for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+          const batch = batches[batchIndex];
+          console.log(`Processing batch ${batchIndex + 1}/${batches.length} with ${batch.length} products`);
+          
+          // Process current batch
+          const batchProductData = await Promise.all(
+            batch.map(async (value) => {
             console.log("brand",value.Brand)
             console.log("Featured value:", value?.Featured, "featured value:", value?.featured)
             console.log("Featured type:", typeof value?.Featured, "featured type:", typeof value?.featured)
             
             // Process images from CSV
-            const imageUrls = value.Images || value.images ? (value.Images || value.images).split("|").map(img => img.trim()).filter(img => img) : [];
+            // Skip empty rows
+            if (!value?.["Product Title Name"] && !value?.title && !value?.Name && !value?.name) {
+              return null;
+            }
+
+            const imageUrls = value?.["Product Image"] || value.Images || value.images ? (value?.["Product Image"] || value.Images || value.images).split("|").map(img => img.trim()).filter(img => img) : [];
             console.log("CSV - Raw image URLs:", imageUrls);
             console.log("CSV - About to call processImportImages");
             const processedImages = await processImportImages(imageUrls);
@@ -295,37 +315,92 @@ const useProductFilter = (data) => {
             
             return {
               image: processedImages,
-              tag: value.Tags || value.tags ? (value.Tags || value.tags).split("|").map(tag => tag.trim()).filter(tag => tag) : [],
-              prices: {
-                originalPrice: Number(value?.Price || value?.price) || 0,
-                price: Number(value?.Price || value?.price) || 0,
-                discount: 0,
-                tradePrice: 0,
-              },
-              isCombination: false,
-              title: {
-                en: value?.Name || value?.name || value?.["Product name"] || value?.["product name"] || "",
-              },
+              tag: value?.["Product Tag"] || value.Tags || value.tags ? (value?.["Product Tag"] || value.Tags || value.tags).split("|").map(tag => tag.trim()).filter(tag => tag) : [],
               
-              weight: value?.Weight || value?.weight || "",
-              productId: value?.ID || value?.id || value?.Id || "",
-              slug: `product-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-              sku: value?.SKU || value?.sku || "",
-              stock: Number(value?.Stock) || 10,
-              description: {
-                en: value?.Description || value?.description || "",
+              // Basic Information
+              productId: value?.["Product Id"] || value?.productId || value?.ID || value?.id || value?.Id || "",
+              title: {
+                en: value?.["Product Title Name"] || value?.title || value?.Name || value?.name || "",
               },
-              // ✅ FIX HERE
-    brand: value?.Brand
-      ? { name: value.Brand.trim() }
-      : null,
+              description: {
+                en: value?.["Product Description"] || value?.description || value?.Description || "",
+              },
+              excerpt: value?.["Product Excerpt"] || value?.excerpt || value?.Excerpt || "",
+              
+              // Categorization
+              category: value?.Category ? { name: value.Category.trim() } : null,
+              defaultCategory: value?.["Default Category"] ? { name: value?.["Default Category"].trim() } : null,
+              
+              // Pricing Information
+              prices: {
+                originalPrice: Number(value?.["RRP"]) || 0,
+                price: Number(value?.["Wholesale Price"]) || 0,
+                discount: Number(value?.["Quick Discount"]) || 0,
+                tradePrice: Number(value?.["Wholesale Price"]) || 0,
+              },
+              quickDiscountType: value?.["Quick Discount Type"] || "fixed",
+              
+              // Inventory Management
+              stock: Number(value?.["Product Quantity"]) || 10,
+              slug: value?.["Product Slug"] || `product-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              
+              // Physical Attributes
+              weight: String(value?.["Product Weight"] || ""),
+              length: String(value?.["Product Length"] || ""),
+              width: String(value?.["Product Width"] || ""),
+              height: String(value?.["Product Height"] || ""),
+              
+              // SKU Management
+              sku: value?.["Product SKU"] || "",
+              barcode: value?.["Product Barcode"] || "",
+              manufacturerSku: value?.["Manufacturer SKU"] || "",
+              internalSku: value?.["Internal SKU"] || "",
+              
+              // Tags & Classification
+              brand: value?.Brand ? { name: value.Brand.trim() } : { name: "" },
+              
+              // Additional Product Information
+              additionalProductDetails: value?.["Additional Product Details"] || "",
+              lastBatchOrderedFromManufacturer: value?.["Last Batch Ordered From Manufacturer"] || "",
+              lastBatchOrderQuantity: Number(value?.["Last Batch Order Quantity"]) || 0,
+              lastBatchOrderReference: value?.["Last Batch Order Reference"] || "",
+              stockArrivalDate: value?.["Stock Arrival Date"] || "",
+              vehicleMake: value?.["Vehicle Make"] || "",
+              vehicleModel: value?.["Vehicle Model"] || "",
+              
+              // Shipping & Supplier
+              flatRateForDropShipping: Number(value?.["Flat Rate for Drop Shipping"]) || 0,
+              shipOutLocation: value?.["Ship Out Location"] || "",
+              directSupplierLink: value?.["Direct Supplier Link"] || "",
+              
+              // SEO Fields
+              metaTitle: value?.["Product Meta Title"] || "",
+              metaDescription: value?.["Meta Product Description"] || "",
+              metaKeywords: value?.["Product Meta Keywords"] ? value?.["Product Meta Keywords"].split("|").map(keyword => keyword.trim()).filter(keyword => keyword) : [],
+              
+              // Other existing fields
+              isCombination: false,
               isFeatured: value?.Featured === "Yes" || value?.featured === "Yes" || value?.Featured === true || value?.featured === true || true,
             };
           })
         );
 
-        setSelectedFile(productData);
-        notifySuccess(`Successfully processed ${productData.length} products with images!`);
+          // Filter out null entries from this batch
+          const filteredBatchData = batchProductData.filter(product => product !== null);
+          allProductData = [...allProductData, ...filteredBatchData];
+          
+          console.log(`Completed batch ${batchIndex + 1}/${batches.length}. Total products so far: ${allProductData.length}`);
+          
+          // Add a small delay between batches to prevent overwhelming the server
+          if (batchIndex < batches.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
+          }
+        }
+
+        // Filter out null entries (empty rows)
+        const filteredProductData = allProductData.filter(product => product !== null);
+        setSelectedFile(filteredProductData);
+        notifySuccess(`Successfully processed ${filteredProductData.length} products with images!`);
         } catch (error) {
           console.error("Error processing CSV:", error);
           notifyError("Error processing CSV file: " + error.message);
