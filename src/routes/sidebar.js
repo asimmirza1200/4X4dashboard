@@ -10,7 +10,8 @@ import {
   FiTool,
   FiShield,
   FiList,
-  FiFileText
+  FiFileText,
+  FiMessageCircle,
 } from "react-icons/fi";
 
 /**
@@ -93,6 +94,21 @@ const sidebar = [
     path: "/cms",
     icon: FiFileText,
     name: "CMS Management",
+  },
+
+  {
+    icon: FiMessageCircle,
+    name: "Community",
+    routes: [
+      {
+        path: "/admin/community",
+        name: "Content Moderation",
+      },
+      {
+        path: "/admin/users",
+        name: "User Management",
+      },
+    ],
   },
 
   {

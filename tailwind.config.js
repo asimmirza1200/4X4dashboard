@@ -15,6 +15,8 @@ const config = {
       },
       height: {
         28: "100px",
+        50: "50px",
+        80:"80px",
         sm: "350px",
         md: "400px",
         330: "330px",

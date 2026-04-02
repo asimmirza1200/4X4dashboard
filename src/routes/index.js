@@ -38,6 +38,9 @@ const CBSGUsers = lazy(() => import("@/pages/CBSGUsers"));
 const CBSGModeration = lazy(() => import("@/pages/CBSGModeration"));
 const CBSGSettings = lazy(() => import("@/pages/CBSGSettings"));
 const PermissionTest = lazy(() => import("@/components/test/PermissionTestSimple"));
+const AdminCommunityDashboard = lazy(() => import("@/pages/AdminCommunityDashboard"));
+const UserManagement = lazy(() => import("@/pages/UserManagement"));
+const UserDetails = lazy(() => import("@/pages/UserDetails"));
 /*
 //  * ⚠ These are internal routes!
 //  * They will be rendered inside the app, using the default `containers/Layout`.
@@ -188,6 +191,18 @@ const routes = [
   {
     path: "/test-permissions",
     component: PermissionTest,
+  },
+  {
+    path: "/admin/community",
+    component: AdminCommunityDashboard,
+  },
+  {
+    path: "/admin/users",
+    component: UserManagement,
+  },
+  {
+    path: "/admin/user-details/:userId",
+    component: UserDetails,
   },
 ];
 
