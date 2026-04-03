@@ -32,6 +32,9 @@ import {
   Select,
   Input,
   Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
   Dropdown,
   DropdownItem,
   Pagination,
@@ -50,6 +53,7 @@ const UserManagement = () => {
   const [showBlockModal, setShowBlockModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [blockReason, setBlockReason] = useState("");
 
   const usersPerPage = 20;
 
@@ -85,13 +89,14 @@ const UserManagement = () => {
       if (isBlocked) {
         await requests.delete(`/admin/users/${userId}/block`);
       } else {
-        await requests.post(`/admin/users/${userId}/block`);
+        await requests.post(`/admin/users/${userId}/block`, { reason: blockReason });
       }
       setUsers(users.map(user => 
-        user.id === userId ? { ...user, isBlocked: !isBlocked } : user
+        user._id === userId ? { ...user, isBlocked: !isBlocked } : user
       ));
       setShowBlockModal(false);
       setSelectedUser(null);
+      setBlockReason("");
     } catch (error) {
       console.error("Failed to block/unblock user:", error);
     }
@@ -348,11 +353,17 @@ const UserManagement = () => {
                   <TableRow key={user._id}>
                     <TableCell className="px-4 py-3">
                       <div className="flex items-center space-x-3">
-                        <Avatar
-                          src={getImageUrl(user.image)}
-                          alt={user.name}
-                          className="w-10 h-10"
-                        />
+                        {user.image ? (
+                          <Avatar
+                            src={getImageUrl(user.image)}
+                            alt={user.name}
+                            className="w-10 h-10"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm">
+                            {user.name?.charAt(0)?.toUpperCase() || 'U'}
+                          </div>
+                        )}
                         <div>
                           <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                             {user.name}
@@ -436,21 +447,35 @@ const UserManagement = () => {
 
       {/* Block User Modal */}
       <Modal isOpen={showBlockModal} onClose={() => setShowBlockModal(false)}>
-        <Modal.Header>
+        <ModalHeader>
           {selectedUser?.isBlocked ? "Unblock User" : "Block User"}
-        </Modal.Header>
-        <Modal.Body>
+        </ModalHeader>
+        <ModalBody>
           <p>
             Are you sure you want to {selectedUser?.isBlocked ? "unblock" : "block"}{" "}
             <strong>{selectedUser?.name}</strong>?
           </p>
           {!selectedUser?.isBlocked && (
-            <p className="mt-2 text-sm text-gray-600">
-              Blocked users cannot create posts, comment, or interact with the community.
-            </p>
+            <>
+              <p className="mt-2 text-sm text-gray-600">
+                Blocked users cannot create posts, comment, or interact with the community.
+              </p>
+              <div className="mt-3">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Block Reason
+                </label>
+                <textarea
+                  value={blockReason}
+                  onChange={(e) => setBlockReason(e.target.value)}
+                  placeholder="Enter reason for blocking this user..."
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                  rows={3}
+                />
+              </div>
+            </>
           )}
-        </Modal.Body>
-        <Modal.Footer>
+        </ModalBody>
+        <ModalFooter>
           <Button
             variant="ghost"
             onClick={() => setShowBlockModal(false)}
@@ -458,20 +483,20 @@ const UserManagement = () => {
             Cancel
           </Button>
           <Button
-            onClick={() => handleBlockUser(selectedUser.id, selectedUser.isBlocked)}
+            onClick={() => handleBlockUser(selectedUser._id, selectedUser.isBlocked)}
             className={selectedUser?.isBlocked ? "bg-green-600 hover:bg-green-700" : "bg-yellow-600 hover:bg-yellow-700"}
           >
             {selectedUser?.isBlocked ? "Unblock" : "Block"}
           </Button>
-        </Modal.Footer>
+        </ModalFooter>
       </Modal>
 
       {/* Delete User Modal */}
       <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)}>
-        <Modal.Header>Delete User</Modal.Header>
-        <Modal.Body>
+        <ModalHeader>Delete User</ModalHeader>
+        <ModalBody>
           <p className="text-red-600 font-medium mb-2">
-            ⚠️ This action cannot be undone!
+            This action cannot be undone!
           </p>
           <p>
             Are you sure you want to permanently delete <strong>{selectedUser?.name}</strong>?
@@ -479,8 +504,8 @@ const UserManagement = () => {
           <p className="mt-2 text-sm text-gray-600">
             This will remove all their posts, comments, and data from the system.
           </p>
-        </Modal.Body>
-        <Modal.Footer>
+        </ModalBody>
+        <ModalFooter>
           <Button
             variant="ghost"
             onClick={() => setShowDeleteModal(false)}
@@ -489,11 +514,11 @@ const UserManagement = () => {
           </Button>
           <Button
             variant="danger"
-            onClick={() => handleDeleteUser(selectedUser.id)}
+            onClick={() => handleDeleteUser(selectedUser._id)}
           >
             Delete Permanently
           </Button>
-        </Modal.Footer>
+        </ModalFooter>
       </Modal>
     </>
   );

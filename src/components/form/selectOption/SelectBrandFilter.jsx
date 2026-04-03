@@ -8,7 +8,11 @@ import BrandServices from "@/services/BrandsServices";
 
 const SelectBrandFilter = ({ setBrand, selectedBrand }) => {
     const { t } = useTranslation();
-    const { data } = useAsync(BrandServices.getAllBrands);
+    const { data } = useAsync(() => BrandServices.getAllBrands({
+        page: 1,
+        limit: 1000, // Get all brands
+        is_active: true // Only active brands
+    }));
 
     return (
         <>
@@ -19,7 +23,8 @@ const SelectBrandFilter = ({ setBrand, selectedBrand }) => {
                 <option value="" defaultValue hidden>
                     {t("Filter by Brand")}
                 </option>
-                {data?.map((brand) => (
+                {/* Handle both array and object response formats */}
+                {(Array.isArray(data) ? data : data?.brands || [])?.map((brand) => (
                     <option key={brand._id} value={brand._id}>
                         {brand.name}
                     </option>

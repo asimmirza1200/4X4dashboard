@@ -4,6 +4,7 @@ import {
   FiCheck,
   FiX,
   FiTrash2,
+  FiMoreVertical,
   FiFlag,
   FiUsers,
   FiTrendingUp,
@@ -53,6 +54,9 @@ const AdminCommunityDashboard = () => {
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [bulkAction, setBulkAction] = useState("");
   const [stats, setStats] = useState(null);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [moderationReason, setModerationReason] = useState("");
+  const [selectedPostId, setSelectedPostId] = useState(null);
 
   const postsPerPage = 20;
 
@@ -86,21 +90,31 @@ const AdminCommunityDashboard = () => {
   const fetchStats = async () => {
     try {
       const data = await requests.get("posts/admin/stats");
+      console.log("Community Stats API response:", data);
       setStats(data);
     } catch (error) {
       console.error("Failed to fetch stats:", error);
     }
   };
 
-  const handlePostStatusUpdate = async (postId, newStatus) => {
+  const handlePostStatusUpdate = async (postId, newStatus, reason = "") => {
     try {
-      await requests.patch(`/posts/${postId}/status`, { status: newStatus });
+      await requests.patch(`/posts/${postId}/status`, { status: newStatus, moderationReason: reason });
       setPosts(posts.map(post => 
-        post.id === postId ? { ...post, status: newStatus } : post
+        post._id === postId ? { ...post, status: newStatus } : post
       ));
+      setShowRejectModal(false);
+      setModerationReason("");
+      setSelectedPostId(null);
     } catch (error) {
       console.error("Failed to update post status:", error);
     }
+  };
+
+  const openRejectModal = (postId) => {
+    setSelectedPostId(postId);
+    setModerationReason("");
+    setShowRejectModal(true);
   };
 
   const handlePermanentDelete = async (postId) => {
@@ -342,12 +356,12 @@ const AdminCommunityDashboard = () => {
                     <TableCell className="px-4 py-3">
                       <div className="max-w-md">
                         <p className="text-sm text-gray-900 dark:text-gray-100 truncate">
-                          {post.content}
+                          {post.caption}
                         </p>
-                        {post.media && post.media.length > 0 && (
+                        {post.media_files && post.media_files.length > 0 && (
                           <div className="flex items-center space-x-2 mt-1">
                             <span className="text-xs text-gray-500">
-                              {post.media[0].type === "image" ? "📷" : "🎥"} {post.media.length} media
+                              {post.media_files[0].type === "image" ? "📷" : "🎥"} {post.media_files[0].type === "image" ? "image" : "video"} ({post.media_files.length})
                             </span>
                           </div>
                         )}
@@ -380,7 +394,7 @@ const AdminCommunityDashboard = () => {
                     </TableCell>
                     <TableCell className="px-4 py-3">
                       {getStatusBadge(post.status)}
-                      {post.reports_count && post.reports_count > 0 && (
+                      {post.reports_count > 0 && (
                         <div className="flex items-center space-x-1 mt-1">
                           <FiFlag className="w-3 h-3 text-red-500" />
                           <span className="text-xs text-red-500">{post.reports_count}</span>
@@ -411,9 +425,10 @@ const AdminCommunityDashboard = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handlePostStatusUpdate(post.id, "approved")}
+                            onClick={() => handlePostStatusUpdate(post._id, "approved")}
                             className="text-green-600"
                             aria-label="Approve post"
+                            title="Approve post"
                           >
                             <FiCheck className="w-4 h-4" />
                           </Button>
@@ -423,30 +438,25 @@ const AdminCommunityDashboard = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handlePostStatusUpdate(post.id, "rejected")}
+                            onClick={() => openRejectModal(post._id)}
                             className="text-red-600"
                             aria-label="Reject post"
+                            title="Reject post"
                           >
                             <FiX className="w-4 h-4" />
                           </Button>
                         )}
                         
-                        <Dropdown
-                          align="right"
-                          renderButton={() => (
-                            <Button variant="ghost" size="icon" aria-label="More options">
-                              <FiTrash2 className="w-4 h-4" />
-                            </Button>
-                          )}
-                        >
-                          <DropdownItem
+                        <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => handlePermanentDelete(post.id)}
-                            className="text-red-600"
+                            className="text-gray-600 hover:text-red-600"
+                            aria-label="Delete post"
+                            title="Delete permanently"
                           >
-                            <FiTrash2 className="w-4 h-4 mr-2" />
-                            Delete Permanently
-                          </DropdownItem>
-                        </Dropdown>
+                            <FiTrash2 className="w-4 h-4" />
+                          </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -512,6 +522,40 @@ const AdminCommunityDashboard = () => {
             disabled={!bulkAction}
           >
             Apply Action
+          </Button>
+        </ModalFooter>
+      </Modal>
+
+      {/* Reject Post Modal */}
+      <Modal isOpen={showRejectModal} onClose={() => setShowRejectModal(false)}>
+        <ModalHeader>Reject Post</ModalHeader>
+        <ModalBody>
+          <p>Are you sure you want to reject this post?</p>
+          <div className="mt-3">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Rejection Reason
+            </label>
+            <textarea
+              value={moderationReason}
+              onChange={(e) => setModerationReason(e.target.value)}
+              placeholder="Enter reason for rejecting this post..."
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+              rows={3}
+            />
+          </div>
+        </ModalBody>
+        <ModalFooter>
+          <Button
+            variant="ghost"
+            onClick={() => setShowRejectModal(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            className="bg-red-600 hover:bg-red-700 text-white"
+            onClick={() => handlePostStatusUpdate(selectedPostId, "rejected", moderationReason)}
+          >
+            Reject
           </Button>
         </ModalFooter>
       </Modal>

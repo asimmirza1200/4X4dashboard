@@ -10,7 +10,11 @@ import {
   FiEye,
   FiFilter,
   FiSearch,
-  FiRefreshCw
+  FiRefreshCw,
+  FiPhone,
+  FiMapPin,
+  FiShield,
+  FiGlobe
 } from "react-icons/fi";
 import PageTitle from "@/components/common/PageTitle";
 import requests from "@/services/httpService";
@@ -49,6 +53,15 @@ const UserDetails = () => {
       setUser(data.user || data);
       setUserPosts(data.posts || []);
       setTotalPages(Math.ceil((data.total || 0) / postsPerPage));
+      
+      // Calculate stats from posts data
+      const posts = data.posts || [];
+      const userObj = data.user || data;
+      userObj.totalPosts = data.total || posts.length;
+      userObj.approvedPosts = posts.filter(p => p.status === 'approved').length;
+      userObj.pendingPosts = posts.filter(p => p.status === 'pending').length;
+      userObj.rejectedPosts = posts.filter(p => p.status === 'rejected').length;
+      setUser(userObj);
     } catch (error) {
       console.error("Failed to fetch user details:", error);
     }
@@ -148,20 +161,38 @@ const UserDetails = () => {
         </div>
 
         <div className="flex items-center space-x-6">
-          <Avatar
-            src={getImageUrl(user?.image)}
-            alt={user?.name}
-            className="w-80 h-80 rounded-full"
-          />
+          {user?.image ? (
+            <Avatar
+              src={getImageUrl(user?.image)}
+              alt={user?.name}
+              className="w-80 h-80 rounded-full"
+            />
+          ) : (
+            <div className="w-20 h-20 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-2xl">
+              {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+            </div>
+          )}
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
               {user?.name || 'Unknown User'}
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
               <div className="flex items-center space-x-2">
                 <FiMail className="w-4 h-4 text-gray-500" />
                 <span className="text-sm text-gray-600">{user?.email}</span>
               </div>
+              {user?.phone && (
+                <div className="flex items-center space-x-2">
+                  <FiPhone className="w-4 h-4 text-gray-500" />
+                  <span className="text-sm text-gray-600">{user?.phone}</span>
+                </div>
+              )}
+              {user?.address && (
+                <div className="flex items-center space-x-2">
+                  <FiMapPin className="w-4 h-4 text-gray-500" />
+                  <span className="text-sm text-gray-600">{user?.address}</span>
+                </div>
+              )}
               <div className="flex items-center space-x-2">
                 <FiCalendar className="w-4 h-4 text-gray-500" />
                 <span className="text-sm text-gray-600">
@@ -169,9 +200,15 @@ const UserDetails = () => {
                 </span>
               </div>
               <div className="flex items-center space-x-2">
-                <FiMessageSquare className="w-4 h-4 text-gray-500" />
+                <FiShield className="w-4 h-4 text-gray-500" />
                 <span className="text-sm text-gray-600">
-                  {user?.totalPosts || 0} posts
+                  {user?.approved ? 'Approved' : 'Not Approved'}
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <FiGlobe className="w-4 h-4 text-gray-500" />
+                <span className="text-sm text-gray-600">
+                  {user?.is_public ? 'Public' : 'Private'} Profile
                 </span>
               </div>
             </div>
@@ -262,7 +299,7 @@ const UserDetails = () => {
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Engagement</th>
                 <th className="px-4 py-3">Created</th>
-                <th className="px-4 py-3">Actions</th>
+                
               </tr>
             </TableHeader>
             <TableBody>
@@ -301,12 +338,12 @@ const UserDetails = () => {
                     <TableCell className="px-4 py-3">
                       <div className="max-w-md">
                         <p className="text-sm text-gray-900 dark:text-gray-100 line-clamp-2">
-                          {post.content}
+                          {typeof post.content === 'string' ? post.content : post.caption || 'No content'}
                         </p>
-                        {post.media && post.media.length > 0 && (
+                        {post.media_files && post.media_files.length > 0 && (
                           <div className="flex items-center space-x-2 mt-1">
                             <span className="text-xs text-gray-500">
-                              {post.media.length} media file(s)
+                              {post.media_files[0].type === "image" ? "📷" : "🎥"} {post.media_files[0].type === "image" ? "image" : "video"} ({post.media_files.length})
                             </span>
                           </div>
                         )}
@@ -319,11 +356,11 @@ const UserDetails = () => {
                       <div className="flex items-center space-x-3 text-sm text-gray-600">
                         <div className="flex items-center space-x-1">
                           <FiHeart className="w-3 h-3" />
-                          <span>{post.likes || 0}</span>
+                          <span>{post.likes_count || 0}</span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <FiMessageSquare className="w-3 h-3" />
-                          <span>{post.comments || 0}</span>
+                          <span>{post.comments_count || 0}</span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <FiEye className="w-3 h-3" />
@@ -336,16 +373,7 @@ const UserDetails = () => {
                         {formatDate(post.createdAt)}
                       </span>
                     </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => window.open(`/admin/post-details/${post._id}`, '_blank')}
-                        aria-label="View post details"
-                      >
-                        <FiEye className="w-4 h-4" />
-                      </Button>
-                    </TableCell>
+                    
                   </TableRow>
                 ))
               )}

@@ -1,14 +1,15 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import Ajv from "ajv";
 import csvToJson from "csvtojson";
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 
 //internal import
 import { SidebarContext } from "@/context/SidebarContext";
 import ProductServices from "@/services/ProductServices";
-import { notifyError, notifySuccess } from "@/utils/toast";
+import { notifyError, notifySuccess, notifyInfo } from "@/utils/toast";
+import { toast } from "react-toastify";
 
 // custom product upload validation schema
 const schema = {
@@ -95,20 +96,22 @@ const processImportImages = async (imageUrls) => {
       continue;
     }
 
-    // During import, always upload images even if they're from our server
-    // This ensures images are properly stored in upload folder
+    // During import, only download and store images from OUR server
+    // Keep external website URLs as-is to save storage and improve speed
     if (imageUrl.startsWith('http')) {
-      console.log("Image URL detected, downloading and uploading to server:", imageUrl);
-      try {
-        // Download the image from URL with proper headers to avoid CORS
-        const response = await axios.get(imageUrl, { 
-          responseType: 'arraybuffer',
-          timeout: 30000, // 30 second timeout for large images
-          headers: {
-            'Accept': 'image/*',
-            'Cache-Control': 'no-cache'
-          }
-        });
+      // Check if the image is from our server
+      if (imageUrl.includes(serverURL) || imageUrl.includes('res.cloudinary.com/ahossain')) {
+        console.log("Image URL from our server detected, downloading and uploading:", imageUrl);
+        try {
+          // Download the image from URL with proper headers to avoid CORS
+          const response = await axios.get(imageUrl, { 
+            responseType: 'arraybuffer',
+            timeout: 30000, // 30 second timeout for large images
+            headers: {
+              'Accept': 'image/*',
+              'Cache-Control': 'no-cache'
+            }
+          });
         
         console.log("Downloaded image successfully, size:", response.data.byteLength);
         
@@ -152,6 +155,11 @@ const processImportImages = async (imageUrls) => {
           processedImages.push(imageUrl);
         }
       }
+      } else {
+        // External URL - keep as-is to save storage and improve speed
+        console.log("External image URL detected, keeping original:", imageUrl);
+        processedImages.push(imageUrl);
+      }
     } else {
       // For relative paths that aren't uploads, construct full URL
       console.log("Relative path detected, constructing full URL:", imageUrl);
@@ -163,7 +171,7 @@ const processImportImages = async (imageUrls) => {
   return processedImages;
 };
 
-const useProductFilter = (data) => {
+const useProductFilter = () => {
   const ajv = new Ajv({ allErrors: true });
   const { setLoading, setIsUpdate } = useContext(SidebarContext);
 
@@ -173,7 +181,7 @@ const useProductFilter = (data) => {
   const [isDisabled, setIsDisable] = useState(false);
 
   //service data filtering
-  const serviceData = data || [];
+  const serviceData = [];
 
   //  console.log('selectedFile',selectedFile)
 
@@ -266,8 +274,8 @@ const useProductFilter = (data) => {
     } else if (file && (file.type === "text/csv" || file.type === "application/csv" || file.type === "application/vnd.ms-excel" || file.name.toLowerCase().endsWith('.csv'))) {
       console.log("CSV file detected, processing...");
       setFileName(file?.name);
-      setIsDisable(true);
-      notifySuccess("Processing CSV file and uploading images...");
+      setIsDisable(true); // Disable import button immediately when file is selected
+      // Don't show notification yet - wait to show progress during actual processing
 
       fileReader.onload = async (event) => {
         try {
@@ -278,6 +286,9 @@ const useProductFilter = (data) => {
           const json = await csvToJson().fromString(text);
           console.log("Converted CSV to JSON:", json);
           console.log("CSV - Number of products to process:", json.length);
+          
+          // Show processing message now that actual processing is starting
+          notifyInfo("Processing CSV file and uploading images...", 'csv-processing-toast');
           
         // Process in batches to avoid timeout
         const BATCH_SIZE = 50; // Process 50 products at a time
@@ -294,7 +305,7 @@ const useProductFilter = (data) => {
           const batch = batches[batchIndex];
           console.log(`Processing batch ${batchIndex + 1}/${batches.length} with ${batch.length} products`);
           
-          // Process current batch
+          // Process current batch (no notification during processing to avoid spam)
           const batchProductData = await Promise.all(
             batch.map(async (value) => {
             console.log("brand",value.Brand)
@@ -309,6 +320,12 @@ const useProductFilter = (data) => {
 
             const imageUrls = value?.["Product Image"] || value.Images || value.images ? (value?.["Product Image"] || value.Images || value.images).split("|").map(img => img.trim()).filter(img => img) : [];
             console.log("CSV - Raw image URLs:", imageUrls);
+            
+            // Show image processing progress
+            if (imageUrls.length > 0) {
+              console.log(`CSV - Processing ${imageUrls.length} images for product...`);
+            }
+            
             console.log("CSV - About to call processImportImages");
             const processedImages = await processImportImages(imageUrls);
             console.log("CSV - Processed images:", processedImages);
@@ -400,9 +417,17 @@ const useProductFilter = (data) => {
         // Filter out null entries (empty rows)
         const filteredProductData = allProductData.filter(product => product !== null);
         setSelectedFile(filteredProductData);
-        notifySuccess(`Successfully processed ${filteredProductData.length} products with images!`);
+        
+        // Dismiss processing toast and show success message
+        toast.dismiss('csv-processing-toast');
+        setIsDisable(false); // Re-enable import button
+        notifySuccess(`✅ File processed successfully! ${filteredProductData.length} products ready for import. Click "Import" to save to database.`);
         } catch (error) {
           console.error("Error processing CSV:", error);
+          
+          // Dismiss processing toast and show error message
+          toast.dismiss('csv-processing-toast');
+          setIsDisable(false); // Re-enable import button on error
           notifyError("Error processing CSV file: " + error.message);
         }
       };
@@ -423,6 +448,9 @@ const useProductFilter = (data) => {
       console.log("Starting upload process with", selectedFile.length, "products");
       console.log("Selected file data:", selectedFile);
       
+      // Show admin that actual import is starting - simple 5 second toast
+      notifyInfo(`🚀 Importing ${selectedFile.length} products in background... You can continue working while we process them.`, 'import-background-toast');
+      
       setLoading(true);
       let productDataValidation = selectedFile.map((value, index) => {
         console.log(`Validating product ${index}:`, value);
@@ -439,19 +467,21 @@ const useProductFilter = (data) => {
       console.log("All validations passed:", validationData);
        console.log("Selected file data:", JSON.stringify(selectedFile, null, 2));
       if (validationData) {
+        // Start import in background - don't wait for response
         ProductServices.addAllProducts(selectedFile)
           .then((res) => {
             console.log("Upload successful:", res);
             setIsUpdate(true);
-            setLoading(false);
-            notifySuccess(res.message);
-            handleRemoveSelectFile(); // Clear the file after successful upload
+            // Background import completed successfully
           })
           .catch((err) => {
             console.error("Upload error:", err);
-            setLoading(false);
-            notifyError(err.message);
+            // Background import failed - admin can check logs
           });
+        
+        // Immediately show success message and reset UI
+        setLoading(false);
+        handleRemoveSelectFile(); // Clear the file after starting upload
       } else {
         setLoading(false);
         notifyError("Please enter valid data!");
@@ -470,7 +500,6 @@ const useProductFilter = (data) => {
   };
 
   return {
-    data,
     filename,
     isDisabled,
     handleSelectFile,

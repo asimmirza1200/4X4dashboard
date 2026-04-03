@@ -500,8 +500,9 @@ const Products = () => {
                         {filename && (
                           <button
                             onClick={handleRemoveSelectFile}
-                            className="text-red-500 hover:text-red-700 text-lg px-2"
+                            className="text-red-500 hover:text-red-700 text-lg px-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:text-red-500"
                             type="button"
+                            disabled={isDisabled}
                           >
                             ×
                           </button>
@@ -509,7 +510,7 @@ const Products = () => {
                         <Button
                           onClick={handleUploadMultiple}
                           className="h-10 px-4"
-                          disabled={!filename}
+                          disabled={!filename || isDisabled}
                         >
                           <span className="text-xs">{t("ImportNow")}</span>
                         </Button>
