@@ -57,6 +57,7 @@ const schema = {
       type: "string",
     },
     brand: { type: "object" },
+    vendor: { type: "object" },
     isFeatured: { type: "boolean" },
   },
   required: ["prices", "title"],
@@ -229,6 +230,22 @@ const useProductFilter = () => {
           const text = JSON.parse(e.target.result);
           console.log("Parsed JSON:", text);
 
+          // Check for vendor information in the file
+          const vendorNames = text
+            .map(item => item.vendor?.name || item.vendor)
+            .filter(vendor => vendor && vendor.trim() !== "");
+          
+          const uniqueVendorNames = [...new Set(vendorNames)];
+          
+          if (uniqueVendorNames.length === 0) {
+            notifyError("❌ Vendor names not found in file! Please add vendor names to your products and try again.");
+            setIsDisable(false);
+            return;
+          }
+
+          console.log("Found vendors in file:", uniqueVendorNames);
+          notifySuccess(`✅ Found ${uniqueVendorNames.length} vendor(s) in file: ${uniqueVendorNames.join(", ")}`);
+
           // Process all products to handle image uploads
           const productData = await Promise.all(
             text.map(async (value) => {
@@ -255,6 +272,7 @@ const useProductFilter = () => {
                 stock: value.stock,
                 description: value.description,
                 brand: value.brand || "",
+                vendor: value.vendor || { name: "", postalCode: "" },
                 weight: value.weight || "",
                 length: value.length || "",
                 width: value.width || "",
@@ -286,6 +304,22 @@ const useProductFilter = () => {
           const json = await csvToJson().fromString(text);
           console.log("Converted CSV to JSON:", json);
           console.log("CSV - Number of products to process:", json.length);
+          
+          // Check for vendor information in the CSV file
+          const vendorNames = json
+            .map(item => item?.Vendor || item?.vendor || item?.["Vendor Name"] || item?.["vendor"])
+            .filter(vendor => vendor && vendor.trim() !== "");
+          
+          const uniqueVendorNames = [...new Set(vendorNames)];
+          
+          if (uniqueVendorNames.length === 0) {
+            notifyError("❌ Vendor names not found in CSV file! Please add a 'Vendor' column to your CSV and try again.");
+            setIsDisable(false);
+            return;
+          }
+
+          console.log("Found vendors in CSV:", uniqueVendorNames);
+          notifySuccess(`✅ Found ${uniqueVendorNames.length} vendor(s) in CSV: ${uniqueVendorNames.join(", ")}`);
           
           // Show processing message now that actual processing is starting
           notifyInfo("Processing CSV file and uploading images...", 'csv-processing-toast');
@@ -375,6 +409,10 @@ const useProductFilter = () => {
               
               // Tags & Classification
               brand: value?.Brand ? { name: value.Brand.trim() } : { name: "" },
+              vendor: value?.Vendor || value?.vendor || value?.["Vendor Name"] ? { 
+                name: (value?.Vendor || value?.vendor || value?.["Vendor Name"]).trim(),
+                postalCode: (value?.["Vendor Postal Code"] || value?.["Vendor Postcode"] || value?.["Vendor Zip"] || value?.vendorPostalCode || "").trim()
+              } : { name: "", postalCode: "" },
               
               // Additional Product Information
               additionalProductDetails: value?.["Additional Product Details"] || "",

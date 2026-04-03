@@ -12,6 +12,7 @@ import {
   FiList,
   FiFileText,
   FiMessageCircle,
+  FiTruck,
 } from "react-icons/fi";
 
 /**
@@ -68,6 +69,11 @@ const sidebar = [
     path: "/orders",
     icon: FiCompass,
     name: "Orders",
+  },
+  {
+    path: "/vendors",
+    icon: FiTruck,
+    name: "Vendors",
   },
 
   {

@@ -339,6 +339,22 @@ const ProductTable = ({ products, isCheck, setIsCheck }) => {
                 )}
               </TableCell>
 
+              {/* Vendor */}
+              <TableCell className="w-32 min-w-[100px] max-w-[120px]">
+                {product.vendor?.name ? (
+                  <span 
+                    className="text-sm text-gray-700 dark:text-gray-300 truncate block" 
+                    title={product.vendor.name}
+                  >
+                    {product.vendor.name}
+                  </span>
+                ) : (
+                  <span className="text-sm text-gray-600 dark:text-gray-400 truncate block" title="—">
+                    —
+                  </span>
+                )}
+              </TableCell>
+
               {/* Phase 6: Statistics */}
               <TableCell className="w-24 min-w-[80px] max-w-[100px]">
                 <div className="flex flex-col text-xs">

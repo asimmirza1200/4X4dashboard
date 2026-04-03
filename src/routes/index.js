@@ -41,6 +41,7 @@ const PermissionTest = lazy(() => import("@/components/test/PermissionTestSimple
 const AdminCommunityDashboard = lazy(() => import("@/pages/AdminCommunityDashboard"));
 const UserManagement = lazy(() => import("@/pages/UserManagement"));
 const UserDetails = lazy(() => import("@/pages/UserDetails"));
+const VendorManagement = lazy(() => import("@/pages/VendorManagement"));
 /*
 //  * ⚠ These are internal routes!
 //  * They will be rendered inside the app, using the default `containers/Layout`.
@@ -203,6 +204,10 @@ const routes = [
   {
     path: "/admin/user-details/:userId",
     component: UserDetails,
+  },
+  {
+    path: "/vendors",
+    component: VendorManagement,
   },
 ];
 

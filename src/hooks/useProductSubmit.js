@@ -256,6 +256,7 @@ const useProductSubmit = (id) => {
         shipOutLocation: data.shipOutLocation,
         directSupplierLink: data.directSupplierLink,
         brand: data.brand || null,
+        vendor: data.vendor || null,
       };
 
       // console.log("productData ===========>", productData, "data", data);
@@ -414,6 +415,7 @@ const useProductSubmit = (id) => {
       setValue("flatRateForDropShipping");
       setValue("shipOutLocation");
       setValue("directSupplierLink");
+      setValue("vendor");
       // setValue('show');
       setImageUrl([]);
       setTag([]);
@@ -468,6 +470,7 @@ const useProductSubmit = (id) => {
       clearErrors("flatRateForDropShipping");
       clearErrors("shipOutLocation");
       clearErrors("directSupplierLink");
+      clearErrors("vendor");
       setIsCombination(false);
       setIsBasicComplete(false);
       setIsSubmitting(false);
@@ -557,6 +560,7 @@ const useProductSubmit = (id) => {
             setValue("shipOutLocation", res.shipOutLocation);
             setValue("directSupplierLink", res.directSupplierLink);
             setValue("brand", res.brand?._id || res.brand || "");
+            setValue("vendor", res.vendor?._id || res.vendor || "");
 
             if (res.categories) {
               res.categories.map((category) => {

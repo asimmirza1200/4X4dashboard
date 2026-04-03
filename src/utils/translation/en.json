@@ -206,6 +206,7 @@
   "CatDescription": "Description",
   "CouponspageTitle": "Coupon",
   "BrandspageTitle": "Brands",
+  "Vendor": "Vendor",
   "SelectedCoupon": "Selected Coupon",
   "AttributeTitle": "Attributes",
   "SearchAttributePlaceholder": "Search by attribute name",

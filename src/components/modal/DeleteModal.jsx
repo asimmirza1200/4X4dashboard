@@ -23,6 +23,7 @@ import { notifyError, notifySuccess } from "@/utils/toast";
 import ReviewServices from "@/services/ReviewServices";
 import BlogServices from "@/services/BlogServices";
 import PageServices from "@/services/PageServices";
+import VendorServices from "@/services/VendorServices";
 
 const DeleteModal = ({ id, ids, setIsCheck, category, title, useParamId }) => {
   const { isModalOpen, closeModal, setIsUpdate } = useContext(SidebarContext);
@@ -302,6 +303,15 @@ const DeleteModal = ({ id, ids, setIsCheck, category, title, useParamId }) => {
           closeModal();
           setIsSubmitting(false);
         }
+      }
+
+      if (location.pathname === "/vendors") {
+        const res = await VendorServices.deleteVendor(id);
+        setIsUpdate(true);
+        notifySuccess(res.message);
+        setServiceId();
+        closeModal();
+        setIsSubmitting(false);
       }
     } catch (err) {
       notifyError(err ? err?.response?.data?.message : err?.message);

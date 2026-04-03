@@ -15,6 +15,23 @@ const ParentCategory = ({
   const { data, loading } = useAsync(CategoryServices?.getAllCategory);
   const { showingTranslateValue } = useUtilsFunction();
 
+  // Flatten categories for Multiselect
+  const flattenCategories = (categories) => {
+    let result = [];
+    for (let category of categories) {
+      result.push({
+        _id: category._id,
+        name: showingTranslateValue(category.name),
+      });
+      if (category?.children?.length > 0) {
+        result = result.concat(flattenCategories(category.children));
+      }
+    }
+    return result;
+  };
+
+  const flatCategories = data ? flattenCategories(data) : [];
+
   const STYLE = `
   .rc-tree-child-tree {
     display: block;
@@ -66,35 +83,36 @@ const ParentCategory = ({
     // }
   };
 
-  const handleSelect = (key) => {
-    let result;
-    data.forEach(element => {
-      result = findObject(element, key);
-    });
-
-    if (result !== undefined) {
-      const getCategory = selectedCategory.filter(
-        (value) => value._id === result._id
-      );
-
-      if (getCategory.length !== 0) {
-        return notifySuccess("This category already selected!");
-      }
-
-      setSelectedCategory((pre) => [
-        ...pre,
-        {
-          _id: result?._id,
-          name: showingTranslateValue(result?.name),
-        },
-      ]);
-      setDefaultCategory(() => [
-        {
-          _id: result?._id,
-          name: showingTranslateValue(result?.name),
-        },
-      ]);
+  const handleSelect = (selectedValue) => {
+    // Find the selected category from the flattened array
+    const selectedCategoryObj = flatCategories.find(cat => cat._id === selectedValue._id);
+    
+    if (!selectedCategoryObj) {
+      return;
     }
+
+    // Check if category already selected
+    const getCategory = selectedCategory.filter(
+      (value) => value._id === selectedCategoryObj._id
+    );
+
+    if (getCategory.length !== 0) {
+      return notifySuccess("This category already selected!");
+    }
+
+    setSelectedCategory((pre) => [
+      ...pre,
+      {
+        _id: selectedCategoryObj._id,
+        name: selectedCategoryObj.name,
+      },
+    ]);
+    setDefaultCategory(() => [
+      {
+        _id: selectedCategoryObj._id,
+        name: selectedCategoryObj.name,
+      },
+    ]);
   };
 
   const handleRemove = (v) => {
@@ -113,7 +131,7 @@ const ParentCategory = ({
           onRemove={(v) => handleRemove(v)}
           onSearch={function noRefCheck() { }}
           onSelect={(v) => handleSelect(v)}
-          // options={selectedCategory}
+          options={flatCategories}
           selectedValues={selectedCategory}
           placeholder={"Select Category"}
         ></Multiselect>

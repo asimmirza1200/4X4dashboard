@@ -35,6 +35,8 @@ const ProductServices = {
     if (product_type) queryString += `&product_type=${product_type}`;
     if (stock_status) queryString += `&stock_status=${stock_status}`;
     if (brand) queryString += `&brand=${brand}`;
+    // Ensure vendor data is populated
+    queryString += `&populate=vendor`;
 
     return requests.get(queryString);
   },

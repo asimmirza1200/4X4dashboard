@@ -836,6 +836,7 @@ const Products = () => {
                         {getSortIcon('brand')}
                       </button>
                     </TableCell>
+                    <TableCell className="w-32 min-w-[100px] max-w-[120px]">{t("Vendor")}</TableCell>
                     {/* Phase 6: Statistics Column */}
                     <TableCell className="w-24 min-w-[80px] max-w-[100px]">{t("Statistics")}</TableCell>
                     <TableCell className="w-20 text-right">{t("ActionsTbl")}</TableCell>

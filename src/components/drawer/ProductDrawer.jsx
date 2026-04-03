@@ -29,20 +29,23 @@ import LabelArea from "@/components/form/selectOption/LabelArea";
 import DrawerButton from "@/components/form/button/DrawerButton";
 import InputValue from "@/components/form/input/InputValue";
 import useProductSubmit from "@/hooks/useProductSubmit";
+import useCategoryData from "@/hooks/useCategoryData";
 import ActiveButton from "@/components/form/button/ActiveButton";
 import InputValueFive from "@/components/form/input/InputValueFive";
 import Uploader from "@/components/image-uploader/Uploader";
-import ParentCategory from "@/components/category/ParentCategory";
+import SelectCategory from "@/components/form/selectOption/SelectCategory";
 import UploaderThree from "@/components/image-uploader/UploaderThree";
 import AttributeOptionTwo from "@/components/attribute/AttributeOptionTwo";
 import AttributeListTable from "@/components/attribute/AttributeListTable";
 import SwitchToggleForCombination from "@/components/form/switch/SwitchToggleForCombination";
 import SelectBrand from "@/components/form/selectOption/SelectBrand";
+import SelectVendor from "@/components/form/selectOption/SelectVendor";
 
 //internal import
 
 const ProductDrawer = ({ id }) => {
   const { t } = useTranslation();
+  const { getCategoryById } = useCategoryData();
 
   // State for profit margin calculations (static - RRP vs Wholesale)
   const [profitMargin, setProfitMargin] = useState({
@@ -68,6 +71,7 @@ const ProductDrawer = ({ id }) => {
 
   // State for brand and stock thresholds
   const [selectedBrand, setSelectedBrand] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [stockStatus, setStockStatus] = useState("normal"); // 'normal', 'low', 'out'
   const [lowStockThreshold, setLowStockThreshold] = useState(10); // Configurable threshold
 
@@ -301,6 +305,9 @@ const ProductDrawer = ({ id }) => {
     if (id && watch('brand')) {
       setSelectedBrand(watch('brand'));
     }
+    if (id && watch('category')) {
+      setSelectedCategoryId(watch('category'));
+    }
     // Initialize stock status
     const currentStock = parseInt(watch('stock')) || 0;
     if (currentStock <= 0) {
@@ -310,7 +317,7 @@ const ProductDrawer = ({ id }) => {
     } else {
       setStockStatus("normal");
     }
-  }, [id, watch('brand'), watch('stock'), lowStockThreshold]);
+  }, [id, watch('brand'), watch('category'), watch('stock'), lowStockThreshold]);
 
   return (
     <>
@@ -563,11 +570,23 @@ const ProductDrawer = ({ id }) => {
               <div className="grid grid-cols-6 gap-3 md:gap-5 xl:gap-6 lg:gap-6 mb-6">
                 <LabelArea label={t("Category")} />
                 <div className="col-span-8 sm:col-span-4">
-                  <ParentCategory
-                    lang={language}
-                    selectedCategory={selectedCategory}
-                    setSelectedCategory={setSelectedCategory}
-                    setDefaultCategory={setDefaultCategory}
+                  <SelectCategory
+                    setCategory={(categoryId) => {
+                      setSelectedCategoryId(categoryId);
+                      setValue('category', categoryId);
+                      // Get the category object and update selectedCategory for default category dropdown
+                      if (categoryId) {
+                        const categoryObj = getCategoryById(categoryId);
+                        if (categoryObj) {
+                          setSelectedCategory([categoryObj]);
+                          setDefaultCategory([categoryObj]);
+                        }
+                      } else {
+                        setSelectedCategory([]);
+                        setDefaultCategory([]);
+                      }
+                    }}
+                    selectedCategory={selectedCategoryId}
                   />
                 </div>
               </div>
@@ -1028,6 +1047,23 @@ const ProductDrawer = ({ id }) => {
 
 
 
+
+              {/* Vendor Selector */}
+              <div className="grid grid-cols-6 gap-3 md:gap-5 xl:gap-6 lg:gap-6 mb-6">
+                <LabelArea label="Vendor" />
+                <div className="col-span-8 sm:col-span-4">
+                  <SelectVendor
+                    register={register}
+                    name="vendor"
+                    label="Vendor"
+                    required={true}
+                  />
+                  <Error errorName={errors.vendor} />
+                  <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Select the vendor/supplier for this product
+                  </div>
+                </div>
+              </div>
 
               {/* Brand Selector */}
               <div className="grid grid-cols-6 gap-3 md:gap-5 xl:gap-6 lg:gap-6 mb-6">
