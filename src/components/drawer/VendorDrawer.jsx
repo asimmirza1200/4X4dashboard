@@ -154,8 +154,11 @@ const VendorDrawer = ({ id }) => {
                       label="Postal Code"
                       name="postalCode"
                       type="text"
-                      placeholder="Postal / ZIP code"
+                      placeholder="Enter 4-digit Australian postal code (e.g., 2000)"
                     />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Please enter a 4-digit Australian postal code (e.g., 2000, 3000)
+                    </p>
                     <Error errorName={errors.postalCode} />
                   </div>
                 </div>

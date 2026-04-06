@@ -243,7 +243,22 @@ const useProductFilter = () => {
             return;
           }
 
+          // Validate Australian postal codes (4 digits)
+          const postalCodePattern = /^\d{4}$/;
+          const vendorPostalCodes = text
+            .map(item => item.vendor?.postalCode)
+            .filter(postalCode => postalCode && postalCode.trim() !== "");
+
+          const invalidPostalCodes = vendorPostalCodes.filter(postalCode => !postalCodePattern.test(postalCode.trim()));
+          
+          if (invalidPostalCodes.length > 0) {
+            notifyError(`❌ Invalid postal codes found: ${invalidPostalCodes.join(", ")}. Please use 4-digit Australian postal codes (e.g., 2000, 3000).`);
+            setIsDisable(false);
+            return;
+          }
+
           console.log("Found vendors in file:", uniqueVendorNames);
+          console.log("Validated postal codes:", vendorPostalCodes);
           notifySuccess(`✅ Found ${uniqueVendorNames.length} vendor(s) in file: ${uniqueVendorNames.join(", ")}`);
 
           // Process all products to handle image uploads
@@ -318,7 +333,22 @@ const useProductFilter = () => {
             return;
           }
 
+          // Validate Australian postal codes (4 digits)
+          const postalCodePattern = /^\d{4}$/;
+          const vendorPostalCodes = json
+            .map(item => item?.["Vendor Postal Code"] || item?.["Vendor Postcode"] || item?.["Vendor Zip"] || item?.vendorPostalCode)
+            .filter(postalCode => postalCode && postalCode.trim() !== "");
+
+          const invalidPostalCodes = vendorPostalCodes.filter(postalCode => !postalCodePattern.test(postalCode.trim()));
+          
+          if (invalidPostalCodes.length > 0) {
+            notifyError(`❌ Invalid postal codes found: ${invalidPostalCodes.join(", ")}. Please use 4-digit Australian postal codes (e.g., 2000, 3000).`);
+            setIsDisable(false);
+            return;
+          }
+
           console.log("Found vendors in CSV:", uniqueVendorNames);
+          console.log("Validated postal codes:", vendorPostalCodes);
           notifySuccess(`✅ Found ${uniqueVendorNames.length} vendor(s) in CSV: ${uniqueVendorNames.join(", ")}`);
           
           // Show processing message now that actual processing is starting

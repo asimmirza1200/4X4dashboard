@@ -23,6 +23,14 @@ const useVendorSubmit = (id) => {
     try {
       setIsSubmitting(true);
 
+      // Validate Australian postal code (4 digits)
+      const postalCodePattern = /^\d{4}$/;
+      if (!postalCodePattern.test(data.postalCode)) {
+        notifyError("Please enter a valid 4-digit Australian postal code (e.g., 2000)");
+        setIsSubmitting(false);
+        return;
+      }
+
       const vendorData = {
         name: data.name,
         email: data.email,
