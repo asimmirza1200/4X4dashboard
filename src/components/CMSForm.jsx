@@ -7,6 +7,7 @@ import { FiSave, FiX } from "react-icons/fi";
 import CMSImageUploader from "@/components/CMSImageUploader";
 import DynamicPromotionsManager from "@/components/DynamicPromotionsManager";
 import DynamicCategoriesManager from "@/components/DynamicCategoriesManager";
+import DynamicFeaturesManager from "@/components/DynamicFeaturesManager";
 
 const CMSForm = ({ pageType, existingPage, onSave, onCancel }) => {
   console.log('DEBUG CMSForm props:', { pageType, existingPage });
@@ -15,20 +16,51 @@ const CMSForm = ({ pageType, existingPage, onSave, onCancel }) => {
   const [currentPageType, setCurrentPageType] = useState(pageType);
   const config = getPageConfig(currentPageType);
 
+  const ensureIndicatorsDefaults = (content) => {
+    // Create a deep copy of the content to avoid mutation
+    const updatedContent = JSON.parse(JSON.stringify(content));
+    
+    // Ensure header indicators always have default values
+    if (updatedContent.header && updatedContent.header.indicators) {
+      const indicators = updatedContent.header.indicators;
+      
+      // Set default values for all indicator fields if they're undefined
+      if (indicators.showWishlist === undefined) indicators.showWishlist = true;
+      if (indicators.showAccount === undefined) indicators.showAccount = true;
+      if (indicators.showCart === undefined) indicators.showCart = true;
+    } else if (updatedContent.header) {
+      // If indicators object doesn't exist, create it with defaults
+      updatedContent.header.indicators = {
+        showWishlist: true,
+        showAccount: true,
+        showCart: true
+      };
+    }
+    
+    return updatedContent;
+  };
+
   useEffect(() => {
     console.log('DEBUG CMSForm useEffect triggered');
     console.log('DEBUG existingPage:', existingPage);
     console.log('DEBUG currentPageType:', currentPageType);
     console.log('DEBUG config:', config);
     
+    let initialData;
     if (existingPage) {
       console.log('DEBUG: Using existingPage.content');
-      setFormData(existingPage.content || {});
+      initialData = existingPage.content || {};
     } else {
       console.log('DEBUG: Using config.defaultContent');
       console.log('DEBUG config.defaultContent:', JSON.stringify(config.defaultContent, null, 2));
-      setFormData(config.defaultContent || {});
+      initialData = config.defaultContent || {};
     }
+    
+    // Ensure indicators have default values in the initial data
+    const processedData = ensureIndicatorsDefaults(initialData);
+    console.log('DEBUG: Processed initial data with indicator defaults:', processedData);
+    
+    setFormData(processedData);
   }, [existingPage, currentPageType]);
 
   const handleFieldChange = (fieldPath, value) => {
@@ -63,13 +95,22 @@ const CMSForm = ({ pageType, existingPage, onSave, onCancel }) => {
       if (current && typeof current === 'object' && key in current) {
         current = current[key];
       } else {
+        // Check if this is an indicator field and return default true
+        if (fieldPath.includes('indicators.show')) {
+          return true;
+        }
         return '';
       }
     }
     
     // Handle array fields like qualityPoints
     if (Array.isArray(current)) {
-      return current.join('\n');
+  return current;
+}
+    
+    // For boolean fields (like indicators), ensure we return proper boolean values
+    if (typeof current === 'boolean') {
+      return current;
     }
     
     return current || '';
@@ -80,9 +121,12 @@ const CMSForm = ({ pageType, existingPage, onSave, onCancel }) => {
     setLoading(true);
 
     try {
+      // Ensure all indicators have default values before saving
+      const processedContent = ensureIndicatorsDefaults(formData);
+      
       const pageData = {
         page: currentPageType,
-        content: formData,
+        content: processedContent,
         updatedAt: new Date().toISOString()
       };
 
@@ -175,6 +219,125 @@ const CMSForm = ({ pageType, existingPage, onSave, onCancel }) => {
             })()}
             onChange={(items) => handleFieldChange('categories.items', items)}
           />
+        ) : field.type === 'dynamic-features' ? (
+          <DynamicFeaturesManager
+            features={(() => {
+              // Check if features data exists and has items
+              const featuresData = getFieldValue('features');
+              console.log('DEBUG featuresData:', featuresData);
+              
+              if (featuresData && featuresData.items && Array.isArray(featuresData.items)) {
+                console.log('DEBUG found features.items:', featuresData.items);
+                return featuresData.items;
+              }
+              // Check for old format data
+              if (featuresData && Object.keys(featuresData).length > 0) {
+                console.log('DEBUG found old format features:', featuresData);
+                // Convert old format to new items if needed
+                return [];
+              }
+              console.log('DEBUG no features found, returning empty array');
+              return [];
+            })()}
+            onChange={(items) => handleFieldChange('features.items', items)}
+          />
+        ) : field.type === 'dynamic-navigation' ? (
+          <div className="space-y-2">
+            <Textarea
+              value={value}
+              onChange={(e) => {
+                const titles = e.target.value.split('\n').filter(t => t.trim());
+                const items = titles.map(title => ({ title: title.trim() }));
+                handleFieldChange(fieldPath, items);
+              }}
+              placeholder="Enter navigation items (one per line)"
+              rows={4}
+              className="w-full"
+            />
+            <p className="text-xs text-gray-500">Enter one navigation item per line</p>
+          </div>
+        ) : field.type === 'dynamic-links' ? (
+
+         (() => {
+    const links = Array.isArray(value) ? value : [];
+
+    return (
+      <div className="space-y-3">
+        {links.map((link, index) => (
+          <div key={index} className="flex gap-2">
+            <Input
+              type="text"
+              placeholder="Title"
+              value={link.title || ''}
+              onChange={(e) => {
+                const updated = [...links];
+                updated[index].title = e.target.value;
+                handleFieldChange(fieldPath, updated);
+              }}
+            />
+
+            <Input
+              type="text"
+              placeholder="/url name"
+              value={link.url || ''}
+              onChange={(e) => {
+                const updated = [...links];
+                updated[index].url = e.target.value;
+                handleFieldChange(fieldPath, updated);
+              }}
+            />
+
+            <button
+              type="button"
+              onClick={() => {
+                const updated = links.filter((_, i) => i !== index);
+                handleFieldChange(fieldPath, updated);
+              }}
+              className="text-red-500 px-2"
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+
+        <Button
+          type="button"
+          onClick={() => {
+            handleFieldChange(fieldPath, [...links, { title: '', url: '' }]);
+          }}
+        >
+          + Add Link
+        </Button>
+      </div>
+    );
+  })()
+        ) : field.type === 'array' ? (
+          <div className="space-y-2">
+            <Textarea
+              value={value}
+              onChange={(e) => {
+                const titles = e.target.value.split('\n').filter(t => t.trim());
+                const items = titles.map(title => ({ title: title.trim() }));
+                handleFieldChange(fieldPath, items);
+              }}
+              placeholder={field.placeholder || "Enter items (one per line)"}
+              rows={4}
+              className="w-full"
+            />
+            <p className="text-xs text-gray-500">Enter one item per line</p>
+          </div>
+        ) : field.type === 'checkbox' ? (
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              checked={value === true || value === 'true'}
+              onChange={(e) => handleFieldChange(fieldPath, e.target.checked)}
+              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+              {field.label}
+            </span>
+          </div>
         ) : (
           <Input
             type={field.type}
@@ -197,14 +360,13 @@ const CMSForm = ({ pageType, existingPage, onSave, onCancel }) => {
               <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
                 {existingPage ? `Edit ${config.title}` : `Create New Page`}
               </h2>
-              <Button
+              <button
                 onClick={onCancel}
-                layout="outline"
-                size="icon"
-                className="text-gray-500 hover:text-gray-700 w-50"
+                className="bg-white text-gray-500 hover:text-gray-700 border border-gray-300 rounded hover:bg-gray-50 p-2 transition-colors duration-200"
+                style={{ width: 'auto', height: 'auto', minWidth: '0' }}
               >
                 <FiX className="text-black" />
-              </Button>
+              </button>
             </div>
             {!existingPage && (
               <div className="mt-4">
@@ -230,7 +392,17 @@ const CMSForm = ({ pageType, existingPage, onSave, onCancel }) => {
           </div>
 
           <form onSubmit={handleSubmit} className="p-6">
-            {config.formSections.map((section) => (
+            {config.formSections.sort((a, b) => {
+              // For home page, put header section first
+              if (currentPageType === 'home' || pageType === 'home') {
+                if (a.key === 'header') return -1;
+                if (b.key === 'header') return 1;
+                // Also put footer section last
+                if (a.key === 'footer') return 1;
+                if (b.key === 'footer') return -1;
+              }
+              return 0;
+            }).map((section) => (
               <Card key={section.key} className="mb-6">
                 <CardBody>
                   <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
@@ -244,19 +416,19 @@ const CMSForm = ({ pageType, existingPage, onSave, onCancel }) => {
             ))}
 
             <div className="flex justify-end gap-3 mt-6">
-              <Button
+              <button
                 type="button"
                 onClick={onCancel}
-                layout="outline"
                 disabled={loading}
-                className="w-80"
+                className="bg-white text-gray-700 hover:text-gray-900 border border-gray-300 rounded hover:bg-gray-50 px-4 py-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ width: 'auto', height: 'auto', minWidth: '0' }}
               >
                 Cancel
-              </Button>
+              </button>
               <Button
                 type="submit"
                 disabled={loading}
-                className="bg-blue-600 hover:bg-blue-700 w-[200px]"
+                className="bg-blue-600 hover:bg-blue-700"
               >
                 {loading ? (
                   'Saving...'

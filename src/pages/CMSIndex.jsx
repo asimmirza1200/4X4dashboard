@@ -130,13 +130,13 @@ const CMSIndex = () => {
             CMS Content Management
           </h1>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Manage all your website pages content including home, shop, and contact pages with full control over text, images, and form elements.
+            Manage all your website content including pages, header, footer, navigation, and branding elements with full control over text, images, and links.
           </p>
         </div>
 
-        <div className="flex gap-3 w-full sm:w-auto">
-          <Button onClick={handleAddNewPage} size="small" className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
-            <FiPlus className="mr-2" />
+        <div className="flex gap-3">
+          <Button onClick={handleAddNewPage}  className="bg-blue-600 hover:bg-blue-700 whitespace-nowrap">
+            <FiPlus className="mr-2 text-base" />
             Add New Page
           </Button>
         </div>
@@ -170,16 +170,22 @@ const CMSIndex = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredPages().map((page, index) => {
             return (
-              <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700">
+              <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:bg-gray-50 dark:hover:bg-gray-700">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-1">
                       <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
                         {cmsFormConfig[page.page]?.title || page.page}
                       </h4>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                      {page.content?.heroSection?.subtitle || page.content?.shopContent?.description || cmsFormConfig[page.page]?.description || 'No description available'}
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1 line-clamp-2">
+                      {page.content?.heroSection?.subtitle || 
+                      page.content?.logo?.slogan || 
+                       page.content?.shopContent?.description || 
+                       page.content?.brand?.description ||
+                       page.content?.logo?.altText ||
+                       cmsFormConfig[page.page]?.description || 
+                       'No description available'}
                     </p>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
                       <div>Last updated: {new Date(page.updatedAt).toLocaleDateString()}</div>

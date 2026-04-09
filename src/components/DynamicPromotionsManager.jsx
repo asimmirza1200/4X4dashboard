@@ -57,14 +57,13 @@ const DynamicPromotionsManager = ({ promotions, onChange }) => {
                 <h4 className="text-lg font-medium text-gray-800 dark:text-gray-200">
                   Promotion Banner {index + 1}
                 </h4>
-                <Button
+                <button
                   onClick={() => removeItem(index)}
-                  size="small"
-                  layout="outline"
-                  className="text-red-600 border-red-600 hover:bg-red-50 w-50"
+                  className="bg-white text-red-600 border border-red-600 rounded hover:bg-red-50 px-3 py-2 transition-colors duration-200"
+                  style={{ width: 'auto', height: 'auto', minWidth: '0' }}
                 >
                   <FiTrash2 className="text-black"/>
-                </Button>
+                </button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
