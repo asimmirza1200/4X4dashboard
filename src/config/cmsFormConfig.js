@@ -323,6 +323,148 @@ export const cmsFormConfig = {
         ]
       }
     ]
+  },
+  'about-us': {
+    title: 'About Us Page',
+    description: 'Manage your about us page content including hero section, company story, team members, mission, vision, and core values.',
+    defaultContent: {
+      heroSection: {
+        title: '',
+        subtitle: '',
+        backgroundImage: ''
+      },
+      companyStory: {
+        title: 'Our Story',
+        description: '',
+        foundedYear: '',
+        backgroundImage: ''
+      },
+      mission: {
+        title: 'Our Mission',
+        description: '',
+        icon: ''
+      },
+      vision: {
+        title: 'Our Vision',
+        description: '',
+        icon: ''
+      },
+      values: {
+        title: 'Our Core Values',
+        items: [
+          {
+            title: 'Quality',
+            description: 'We provide only the highest quality auto parts',
+            icon: ''
+          },
+          {
+            title: 'Integrity',
+            description: 'We conduct business with honesty and transparency',
+            icon: ''
+          },
+          {
+            title: 'Customer Service',
+            description: 'We prioritize customer satisfaction above all',
+            icon: ''
+          },
+          {
+            title: 'Innovation',
+            description: 'We constantly seek new and better solutions',
+            icon: ''
+          }
+        ]
+      },
+      team: {
+        title: 'Meet Our Team',
+        description: 'Get to know the people behind our success',
+        members: []
+      },
+      stats: {
+        title: 'Our Achievements',
+        items: [
+          {
+            number: '10+',
+            label: 'Years in Business'
+          },
+          {
+            number: '50K+',
+            label: 'Happy Customers'
+          },
+          {
+            number: '1000+',
+            label: 'Products Available'
+          },
+          {
+            number: '24/7',
+            label: 'Customer Support'
+          }
+        ]
+      }
+    },
+    formSections: [
+      {
+        key: 'heroSection',
+        title: 'Hero Section',
+        fields: [
+          { key: 'title', label: 'Title', type: 'text', placeholder: 'About Us' },
+          { key: 'subtitle', label: 'Subtitle', type: 'textarea', placeholder: 'Learn more about our company and what drives us', rows: 3 },
+          { key: 'backgroundImage', label: 'Background Image', type: 'image' }
+        ]
+      },
+      {
+        key: 'companyStory',
+        title: 'Company Story',
+        fields: [
+          { key: 'title', label: 'Section Title', type: 'text', placeholder: 'Our Story' },
+          { key: 'description', label: 'Story Description', type: 'textarea', placeholder: 'Tell your company story...', rows: 6, fullWidth: true },
+          { key: 'foundedYear', label: 'Founded Year', type: 'text', placeholder: '2010' },
+          { key: 'backgroundImage', label: 'Story Background Image', type: 'image' }
+        ]
+      },
+      {
+        key: 'mission',
+        title: 'Mission',
+        fields: [
+          { key: 'title', label: 'Mission Title', type: 'text', placeholder: 'Our Mission' },
+          { key: 'description', label: 'Mission Description', type: 'textarea', placeholder: 'Describe your mission...', rows: 4, fullWidth: true },
+          { key: 'icon', label: 'Mission Icon', type: 'image' }
+        ]
+      },
+      {
+        key: 'vision',
+        title: 'Vision',
+        fields: [
+          { key: 'title', label: 'Vision Title', type: 'text', placeholder: 'Our Vision' },
+          { key: 'description', label: 'Vision Description', type: 'textarea', placeholder: 'Describe your vision...', rows: 4, fullWidth: true },
+          { key: 'icon', label: 'Vision Icon', type: 'image' }
+        ]
+      },
+      {
+        key: 'values',
+        title: 'Core Values',
+        fields: [
+          { key: 'title', label: 'Section Title', type: 'text', placeholder: 'Our Core Values' },
+          { key: 'items', label: 'Values Items', type: 'dynamic-values', fullWidth: true }
+        ]
+      },
+      {
+        key: 'team',
+        title: 'Team',
+        fields: [
+          { key: 'title', label: 'Section Title', type: 'text', placeholder: 'Meet Our Team' },
+          { key: 'description', label: 'Team Description', type: 'textarea', placeholder: 'Get to know the people behind our success', rows: 3, fullWidth: true },
+          { key: 'members', label: 'Team Members', type: 'dynamic-team', fullWidth: true }
+        ]
+      },
+      {
+        key: 'stats',
+        title: 'Statistics/Achievements',
+        fields: [
+          { key: 'title', label: 'Section Title', type: 'text', placeholder: 'Our Achievements' },
+          { key: 'items', label: 'Stats Items', type: 'dynamic-stats', fullWidth: true }
+        ]
+      }
+    ]
   }
 };
 
