@@ -8,6 +8,9 @@ import CMSImageUploader from "@/components/CMSImageUploader";
 import DynamicPromotionsManager from "@/components/DynamicPromotionsManager";
 import DynamicCategoriesManager from "@/components/DynamicCategoriesManager";
 import DynamicFeaturesManager from "@/components/DynamicFeaturesManager";
+import DynamicValuesManager from "@/components/DynamicValuesManager";
+import DynamicTeamManager from "@/components/DynamicTeamManager";
+import DynamicStatsManager from "@/components/DynamicStatsManager";
 
 const CMSForm = ({ pageType, existingPage, onSave, onCancel }) => {
   console.log('DEBUG CMSForm props:', { pageType, existingPage });
@@ -240,6 +243,51 @@ const CMSForm = ({ pageType, existingPage, onSave, onCancel }) => {
               return [];
             })()}
             onChange={(items) => handleFieldChange('features.items', items)}
+          />
+        ) : field.type === 'dynamic-values' ? (
+          <DynamicValuesManager
+            values={(() => {
+              console.log('DEBUG dynamic-values fieldPath:', fieldPath);
+              const valuesData = getFieldValue(fieldPath);
+              console.log('DEBUG dynamic-values valuesData:', valuesData);
+              if (Array.isArray(valuesData)) {
+                console.log('DEBUG dynamic-values found items:', valuesData);
+                return valuesData;
+              }
+              console.log('DEBUG dynamic-values no items found, returning empty');
+              return [];
+            })()}
+            onChange={(items) => handleFieldChange(fieldPath, items)}
+          />
+        ) : field.type === 'dynamic-team' ? (
+          <DynamicTeamManager
+            members={(() => {
+              console.log('DEBUG dynamic-team fieldPath:', fieldPath);
+              const teamData = getFieldValue(fieldPath);
+              console.log('DEBUG dynamic-team teamData:', teamData);
+              if (Array.isArray(teamData)) {
+                console.log('DEBUG dynamic-team found members:', teamData);
+                return teamData;
+              }
+              console.log('DEBUG dynamic-team no members found, returning empty');
+              return [];
+            })()}
+            onChange={(members) => handleFieldChange(fieldPath, members)}
+          />
+        ) : field.type === 'dynamic-stats' ? (
+          <DynamicStatsManager
+            items={(() => {
+              console.log('DEBUG dynamic-stats fieldPath:', fieldPath);
+              const statsData = getFieldValue(fieldPath);
+              console.log('DEBUG dynamic-stats statsData:', statsData);
+              if (Array.isArray(statsData)) {
+                console.log('DEBUG dynamic-stats found items:', statsData);
+                return statsData;
+              }
+              console.log('DEBUG dynamic-stats no items found, returning empty');
+              return [];
+            })()}
+            onChange={(items) => handleFieldChange(fieldPath, items)}
           />
         ) : field.type === 'dynamic-navigation' ? (
           <div className="space-y-2">
