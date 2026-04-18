@@ -38,7 +38,7 @@ const CBSGUsers = lazy(() => import("@/pages/CBSGUsers"));
 const CBSGModeration = lazy(() => import("@/pages/CBSGModeration"));
 const CBSGSettings = lazy(() => import("@/pages/CBSGSettings"));
 const PermissionTest = lazy(() => import("@/components/test/PermissionTestSimple"));
-const AdminCommunityDashboard = lazy(() => import("@/pages/AdminCommunityDashboard"));
+// const AdminCommunityDashboard = lazy(() => import("@/pages/AdminCommunityDashboard"));
 const UserManagement = lazy(() => import("@/pages/UserManagement"));
 const UserDetails = lazy(() => import("@/pages/UserDetails"));
 const VendorManagement = lazy(() => import("@/pages/VendorManagement"));
@@ -193,10 +193,10 @@ const routes = [
     path: "/test-permissions",
     component: PermissionTest,
   },
-  {
-    path: "/admin/community",
-    component: AdminCommunityDashboard,
-  },
+  // {
+  //   path: "/admin/community",
+  //   component: AdminCommunityDashboard,
+  // },
   {
     path: "/admin/users",
     component: UserManagement,

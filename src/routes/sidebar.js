@@ -102,20 +102,20 @@ const sidebar = [
     name: "CMS Management",
   },
 
-  {
-    icon: FiMessageCircle,
-    name: "Community",
-    routes: [
-      {
-        path: "/admin/community",
-        name: "Content Moderation",
-      },
-      {
-        path: "/admin/users",
-        name: "User Management",
-      },
-    ],
-  },
+  // {
+  //   icon: FiMessageCircle,
+  //   name: "Community",
+  //   routes: [
+  //     {
+  //       path: "/admin/community",
+  //       name: "Content Moderation",
+  //     },
+  //     {
+  //       path: "/admin/users",
+  //       name: "User Management",
+  //     },
+  //   ],
+  // },
 
   {
     icon: FiTool,

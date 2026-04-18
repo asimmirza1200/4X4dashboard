@@ -27,7 +27,7 @@ const CBSGBuildDetail = () => {
     CBSGServices.getBuildById(id)
   );
 
-  const build = data?.build;
+  const build = data;
 
   // Approve/Reject build
   const handleApproveBuild = async (approved) => {

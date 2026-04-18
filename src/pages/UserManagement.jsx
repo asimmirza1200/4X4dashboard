@@ -87,7 +87,7 @@ const UserManagement = () => {
   const handleBlockUser = async (userId, isBlocked) => {
     try {
       if (isBlocked) {
-        await requests.delete(`/admin/users/${userId}/block`);
+        await requests.post(`/admin/users/${userId}/unblock`);
       } else {
         await requests.post(`/admin/users/${userId}/block`, { reason: blockReason });
       }
