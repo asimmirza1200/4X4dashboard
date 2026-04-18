@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { getImageUrl } from "@/utils/getImageUrl";
+import { useBarcodeModal } from '../../hooks/useBarcodeModal';
 const ProductInfoModal = ({ product, isOpen, onClose }) => {
   localStorage.setItem("product",JSON.stringify(product))
   if (!isOpen || !product) return null;
 
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
+  // Barcode functionality
+  const { openBarcodeModal, barcodeModal, barcodeCanvasRef, closeBarcodeModal, printBarcode } = useBarcodeModal();
 
   // Helper function to get translated value
   const getTranslatedValue = (value) => {
@@ -476,9 +480,26 @@ const ProductInfoModal = ({ product, isOpen, onClose }) => {
                 </h2>
                 
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-start">
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Barcode:</span>
-                    <span className="text-sm text-gray-900 dark:text-gray-100 font-mono">{product.barcode || 'Not specified'}</span>
+                    <div className="text-right">
+                      {product.barcode ? (
+                        <div className="space-y-2">
+                          <span className="text-sm text-gray-900 dark:text-gray-100 font-mono block">{product.barcode}</span>
+                          <button
+                            onClick={() => openBarcodeModal("Product Barcode", product.barcode)}
+                            className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors"
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17H7m10 2a2 2 0 012-2v-4a2 2 0 00-2-2H7a2 2 0 00-2 2v4a2 2 0 002 2m10-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10m10-2a2 2 0 002-2m-2 2H7" />
+                            </svg>
+                            View & Print
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-500 dark:text-gray-400">Not specified</span>
+                      )}
+                    </div>
                   </div>
                   
                   <div className="flex justify-between items-center">
@@ -702,6 +723,65 @@ const ProductInfoModal = ({ product, isOpen, onClose }) => {
           </div>
         </div>
       </div>
+
+      {/* Barcode Modal */}
+      {barcodeModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{barcodeModal.title}</h3>
+              <button
+                onClick={closeBarcodeModal}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="mb-6 p-4 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700">
+              <div className="text-center">
+                <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+                  Barcode Preview (Code 128)
+                </div>
+                <div className="bg-white dark:bg-gray-700 p-4 rounded border border-gray-300 dark:border-gray-600 inline-block">
+                  <canvas
+                    ref={barcodeCanvasRef}
+                    width="400"
+                    height="150"
+                    className="border border-gray-300 dark:border-gray-600"
+                    style={{
+                      background: 'white',
+                      display: 'block',
+                      margin: '0 auto'
+                    }}
+                  />
+                </div>
+                <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                  Barcode: {barcodeModal.skuValue}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={closeBarcodeModal}
+                className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={printBarcode}
+                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md flex items-center gap-2 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17H7m10 2a2 2 0 012-2v-4a2 2 0 00-2-2H7a2 2 0 00-2 2v4a2 2 0 002 2m10-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10m10-2a2 2 0 002-2m-2 2H7" />
+                </svg>
+                Print Barcode
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
