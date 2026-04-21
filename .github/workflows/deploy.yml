@@ -3,7 +3,7 @@ name: Deploy Backend
 on:
   push:
     branches:
-      - master
+      - main
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -13,8 +13,8 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
+          username: root
+          password: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd /var/www/4x4/4x4-dashboard
             git pull origin main
