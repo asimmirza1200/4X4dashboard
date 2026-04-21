@@ -5,7 +5,6 @@ import Cookies from "js-cookie";
 import { useDropzone } from "react-dropzone";
 import { FiUploadCloud, FiXCircle } from "react-icons/fi";
 import { notifyError, notifySuccess } from "@/utils/toast";
-
 // Max image size: 5 MB (specifically for CMS background images)
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5242880
 
@@ -78,8 +77,6 @@ const CMSImageUploader = ({ setImageUrl, imageUrl }) => {
         }
 
         const baseURL = import.meta.env.VITE_APP_API_BASE_URL || 'http://localhost:5055/api';
-        // Extract server URL for images (remove /api suffix if present)
-        const serverURL = baseURL.endsWith('/api') ? baseURL.slice(0, -4) : baseURL;
 
         axios({
           url: `${baseURL}/upload/images`,
@@ -102,9 +99,9 @@ const CMSImageUploader = ({ setImageUrl, imageUrl }) => {
             const uploadedUrl = res?.data?.files?.[0]?.url || res?.data?.url;
             if (uploadedUrl) {
               // Construct full URL if it's a relative path
-              const fullUrl = uploadedUrl.startsWith('http') 
-                ? uploadedUrl 
-                : `${serverURL}${uploadedUrl}`;
+              const fullUrl = uploadedUrl.startsWith('http')
+                ? uploadedUrl
+                : `${baseURL}/website${uploadedUrl}`;
               setImageUrl(fullUrl);
             }
           })
