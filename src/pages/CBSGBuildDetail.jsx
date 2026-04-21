@@ -16,6 +16,7 @@ import CBSGServices from "@/services/CBSGServices";
 import PageTitle from "@/components/Typography/PageTitle";
 import TableLoading from "@/components/preloader/TableLoading";
 import AnimatedContent from "@/components/common/AnimatedContent";
+import { getImageUrl } from "@/utils/getImageUrl";
 
 const CBSGBuildDetail = () => {
   const { id } = useParams();
@@ -232,19 +233,38 @@ const CBSGBuildDetail = () => {
               <h3 className="text-lg font-semibold mb-4">Images</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {build.hero_image_url && (
-                  <img
-                    src={build.hero_image_url}
-                    alt={build.name}
-                    className="w-full h-48 object-cover rounded"
-                  />
+                  build.hero_image_url.match(/\.(mp4|webm|ogg|mov|avi)$/i) ? (
+                    <video
+                      src={getImageUrl(build.hero_image_url)}
+                      alt={build.name}
+                      className="w-full h-48 object-cover rounded"
+                      controls
+                    />
+                  ) : (
+                    <img
+                      src={getImageUrl(build.hero_image_url)}
+                      alt={build.name}
+                      className="w-full h-48 object-cover rounded"
+                    />
+                  )
                 )}
                 {build.media_urls?.map((url, index) => (
-                  <img
-                    key={index}
-                    src={url}
-                    alt={`${build.name} ${index + 1}`}
-                    className="w-full h-48 object-cover rounded"
-                  />
+                  url.match(/\.(mp4|webm|ogg|mov|avi)$/i) ? (
+                    <video
+                      key={index}
+                      src={getImageUrl(url)}
+                      alt={`${build.name} ${index + 1}`}
+                      className="w-full h-48 object-cover rounded"
+                      controls
+                    />
+                  ) : (
+                    <img
+                      key={index}
+                      src={getImageUrl(url)}
+                      alt={`${build.name} ${index + 1}`}
+                      className="w-full h-48 object-cover rounded"
+                    />
+                  )
                 ))}
               </div>
             </CardBody>

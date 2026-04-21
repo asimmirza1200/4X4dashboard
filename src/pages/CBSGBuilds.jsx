@@ -25,6 +25,7 @@ import PageTitle from "@/components/Typography/PageTitle";
 import { SidebarContext } from "@/context/SidebarContext";
 import TableLoading from "@/components/preloader/TableLoading";
 import AnimatedContent from "@/components/common/AnimatedContent";
+import { getImageUrl } from "@/utils/getImageUrl";
 
 const CBSGBuilds = () => {
   const { t } = useTranslation();
@@ -179,11 +180,20 @@ const CBSGBuilds = () => {
                         <TableCell>
                           <div className="flex items-center">
                             {build.hero_image_url && (
-                              <img
-                                src={build.hero_image_url}
-                                alt={build.name}
-                                className="w-10 h-10 rounded mr-3 object-cover"
-                              />
+                              build.hero_image_url.match(/\.(mp4|webm|ogg|mov|avi)$/i) ? (
+                                <video
+                                  src={getImageUrl(build.hero_image_url)}
+                                  alt={build.name}
+                                  className="w-10 h-10 rounded mr-3 object-cover"
+                                  muted
+                                />
+                              ) : (
+                                <img
+                                  src={getImageUrl(build.hero_image_url)}
+                                  alt={build.name}
+                                  className="w-10 h-10 rounded mr-3 object-cover"
+                                />
+                              )
                             )}
                             <span className="font-semibold">{build.name}</span>
                           </div>
