@@ -51,16 +51,15 @@ const DynamicStatsManager = ({ items = [], onChange }) => {
             </div>
           </div>
           <div className="mt-4 flex justify-end">
-            <Button
-              type="button"
+            <button
+              style={{ width: 'auto', height: 'auto', minWidth: '0' }}
               onClick={() => handleRemoveItem(index)}
-              layout="outline"
-              size="small"
-              className="text-red-500 border-red-300 hover:bg-red-50"
+             
+              className="flex items-center justify-center bg-white  text-gray-500 hover:text-gray-700 border border-gray-300 rounded hover:bg-gray-50 p-2 transition-colors duration-200"
             >
               <FiTrash2 className="mr-2" />
               Remove
-            </Button>
+            </button>
           </div>
         </div>
       ))}

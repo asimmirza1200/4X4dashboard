@@ -61,17 +61,16 @@ const DynamicValuesManager = ({ values = [], onChange }) => {
               className="w-full"
             />
           </div>
-          <div className="mt-4 flex justify-end">
-            <Button
-              type="button"
+          <div className="mt-4 flex justify-end ">
+            <button  style={{ width: 'auto', height: 'auto', minWidth: '0' }}
+             
               onClick={() => handleRemoveItem(index)}
-              layout="outline"
-              size="small"
-              className="text-red-500 border-red-300 hover:bg-red-50"
+    
+               className="flex items-center justify-center bg-white  text-gray-500 hover:text-gray-700 border border-gray-300 rounded hover:bg-gray-50 p-2 transition-colors duration-200"
             >
-              <FiTrash2 className="mr-2" />
+              <FiTrash2 className="mr-2 text-black" />
               Remove
-            </Button>
+            </button>
           </div>
         </div>
       ))}
@@ -114,15 +113,15 @@ const DynamicValuesManager = ({ values = [], onChange }) => {
           />
         </div>
         <div className="mt-4">
-          <Button
-            type="button"
+          <button
+           style={{ width: 'auto', height: 'auto', minWidth: '0' }}
             onClick={handleAddItem}
             disabled={!newItem.title.trim()}
-            className="bg-blue-600 hover:bg-blue-700"
+           className="flex items-center justify-center bg-white  text-gray-500 hover:text-gray-700 border border-gray-300 rounded hover:bg-gray-50 p-2 transition-colors duration-200"
           >
             <FiPlus className="mr-2" />
             Add Value
-          </Button>
+          </button>
         </div>
       </div>
     </div>
