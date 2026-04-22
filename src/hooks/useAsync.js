@@ -26,8 +26,8 @@ const useAsync = (asyncFunction, dependencies = null) => {
     sortedField,
   } = useContext(SidebarContext);
 
-  // Use custom dependencies if provided, otherwise use default context dependencies
-  const deps = dependencies || [
+  // Use custom dependencies if provided (even if empty array), otherwise use default context dependencies
+  const deps = Array.isArray(dependencies) ? dependencies : [
     invoice,
     status,
     zone,
@@ -68,15 +68,13 @@ const useAsync = (asyncFunction, dependencies = null) => {
             setLoading(false);
           } else {
             console.log("err.message",err)
-            setError(err.response.data.message || "An error occurred");
+            setError(err.response?.data?.message || err.message || "An error occurred");
             setLoading(false);
             setData([]);
           }
         }
       }
     })();
-
-    setIsUpdate(false);
 
     return () => {
       unmounted = true;

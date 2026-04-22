@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect, useMemo } from "react";
+import React, { useContext, useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
   Table,
   TableHeader,
@@ -56,8 +56,8 @@ const Products = () => {
   const {
     toggleDrawer,
     lang,
-    currentPage,
-    handleChangePage,
+    currentPage: contextCurrentPage,
+    handleChangePage: contextHandleChangePage,
     searchText,
     category,
     setCategory,
@@ -73,6 +73,22 @@ const Products = () => {
     isDrawerOpen,
   } = useContext(SidebarContext);
 
+  // Use local pagination state instead of global context to avoid triggering other components
+  const [localCurrentPage, setLocalCurrentPage] = useState(contextCurrentPage || 1);
+
+  // Sync local state with context when context changes (e.g., when navigating from other pages)
+  useEffect(() => {
+    if (contextCurrentPage && contextCurrentPage !== localCurrentPage) {
+      setLocalCurrentPage(contextCurrentPage);
+    }
+  }, [contextCurrentPage]);
+
+  const handleLocalPageChange = (page) => {
+    // Only update if the page is different to prevent duplicate calls
+    if (page !== localCurrentPage) {
+      setLocalCurrentPage(page);
+    }
+  };
   // Phase 7: Check if mobile view
   const isMobile = windowDimension <= 768;
 
@@ -88,18 +104,10 @@ const Products = () => {
   const [sortBy, setSortBy] = useState('date'); // Default: date
   const [sortDir, setSortDir] = useState('desc'); // Default: descending
 
-  // Reset to page 1 when drawer closes after adding product (to see new product)
-  useEffect(() => {
-    if (!isDrawerOpen && isUpdate && currentPage !== 1) {
-      // Reset to first page to see the newly added product
-      handleChangePage(1);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDrawerOpen, isUpdate]);
-
   // Phase 3: Fetch status counts for tabs
-  const { data: statusCounts } = useAsync(() =>
-    ProductServices.getProductStatusCounts()
+  const { data: statusCounts } = useAsync(
+    () => ProductServices.getProductStatusCounts(),
+    []
   );
 
   // Build API params
@@ -124,41 +132,36 @@ const Products = () => {
     }
   }
 
-  const apiParams = {
-    page: currentPage,
-    limit: limitData,
-    category: category || "",
-    title: searchText || "",
-    search: searchText || "", // Enhanced search (name, SKU, description)
-    sort_by: effectiveSortBy || "",
-    sort_dir: effectiveSortDir || "",
-    status: status || "all", // Phase 3: Status filter
-    product_type: productType || "", // Phase 3: Product type filter
-    stock_status: stockStatus || "", // Phase 3: Stock status filter
-    brand: selectedBrand || "", // Phase 3: Brand filter
-  };
+  const apiParams = useMemo(() => {
+    const params = {
+      page: localCurrentPage,
+      limit: limitData,
+      category: category || "",
+      title: searchText || "",
+      search: searchText || "", // Enhanced search (name, SKU, description)
+      sort_by: effectiveSortBy || "",
+      sort_dir: effectiveSortDir || "",
+      status: status || "all", // Phase 3: Status filter
+      product_type: productType || "", // Phase 3: Product type filter
+      stock_status: stockStatus || "", // Phase 3: Stock status filter
+      brand: selectedBrand || "", // Phase 3: Brand filter
+    };
 
-  // Send price parameter for non-price sorting options (published, unPublished, etc.)
-  if (priceParam) {
-    apiParams.price = priceParam;
-  }
+    // Send price parameter for non-price sorting options (published, unPublished, etc.)
+    if (priceParam) {
+      params.price = priceParam;
+    }
 
-  const { data, loading, error } = useAsync(() =>
-    ProductServices.getAllProducts(apiParams),
-    [
-      currentPage,
-      limitData,
-      category,
-      searchText,
-      sortedField,
-      sortBy,
-      sortDir,
-      status,
-      productType,
-      stockStatus,
-      selectedBrand,
-      isUpdate, // Add isUpdate to trigger refetch when product is added/updated
-    ]
+    return params;
+  }, [localCurrentPage, limitData, category, searchText, effectiveSortBy, effectiveSortDir, status, productType, stockStatus, selectedBrand, priceParam]);
+
+  const fetchProducts = useCallback(() => {
+    return ProductServices.getAllProducts(apiParams);
+  }, [apiParams]);
+
+  const { data, loading, error } = useAsync(
+    fetchProducts,
+    [localCurrentPage, limitData, category, searchText, sortedField, sortBy, sortDir, status, productType, stockStatus, selectedBrand]
   );
 
   // react hooks
@@ -179,6 +182,7 @@ const Products = () => {
   };
   // handle reset field
   const handleResetField = () => {
+    
     setCategory("");
     setSortedField("");
     setSortBy('date');
@@ -757,154 +761,192 @@ const Products = () => {
         <span className="text-center mx-auto text-red-500">{error}</span>
       ) : displayProducts && displayProducts.length > 0 ? (
         <>
-          {/* Phase 7: Desktop Table View - Hidden on Mobile */}
-          <div className="hidden lg:block">
-            <TableContainer className="mb-8 rounded-b-lg overflow-x-auto">
-              <Table className="min-w-full table-fixed">
-                <TableHeader>
-                  <tr>
-                    <TableCell className="w-12">
-                      <CheckBox
-                        type="checkbox"
-                        name="selectAll"
-                        id="selectAll"
-                        isChecked={isCheckAll}
-                        handleClick={handleSelectAll}
-                      />
-                    </TableCell>
-                    <TableCell className="w-16">{t("Thumbnail")}</TableCell>
-                    <TableCell className="w-48 min-w-[180px] max-w-[200px]">
-                      <button
-                        type="button"
-                        onClick={() => handleSort('name')}
-                        className="flex items-center gap-1 hover:text-emerald-600"
-                      >
-                        {t("ProductNameTbl")}
-                        {getSortIcon('name')}
-                      </button>
-                    </TableCell>
-                    <TableCell className="w-32 min-w-[100px] max-w-[120px]">
-                      <button
-                        type="button"
-                        onClick={() => handleSort('sku')}
-                        className="flex items-center gap-1 hover:text-emerald-600"
-                      >
-                        {t("SKU")}
-                        {getSortIcon('sku')}
-                      </button>
-                    </TableCell>
-                    <TableCell className="w-24 min-w-[80px] max-w-[100px]">
-                      <button
-                        type="button"
-                        onClick={() => handleSort('stock')}
-                        className="flex items-center gap-1 hover:text-emerald-600"
-                      >
-                        {t("StockTbl")}
-                        {getSortIcon('stock')}
-                      </button>
-                    </TableCell>
-                    <TableCell className="w-24 min-w-[80px] max-w-[100px]">
-                      <button
-                        type="button"
-                        onClick={() => handleSort('price')}
-                        className="flex items-center gap-1 hover:text-emerald-600"
-                      >
-                        {t("PriceTbl")}
-                        {getSortIcon('price')}
-                      </button>
-                    </TableCell>
-                    <TableCell className="w-40 min-w-[120px] max-w-[150px]">{t("CategoryTbl")}</TableCell>
-                    <TableCell className="w-40 min-w-[120px] max-w-[150px]">{t("Tags")}</TableCell>
-                    <TableCell className="w-16 text-center">{t("Featured")}</TableCell>
-                    <TableCell className="w-40 min-w-[140px] max-w-[160px]">
-                      <button
-                        type="button"
-                        onClick={() => handleSort('date')}
-                        className="flex items-center gap-1 hover:text-emerald-600"
-                      >
-                        {t("Date")}
-                        {getSortIcon('date')}
-                      </button>
-                    </TableCell>
-                    <TableCell className="w-32 min-w-[100px] max-w-[120px]">
-                      <button
-                        type="button"
-                        onClick={() => handleSort('brand')}
-                        className="flex items-center gap-1 hover:text-emerald-600"
-                      >
-                        {t("Brands")}
-                        {getSortIcon('brand')}
-                      </button>
-                    </TableCell>
-                    <TableCell className="w-32 min-w-[100px] max-w-[120px]">{t("Vendor")}</TableCell>
-                    {/* Phase 6: Statistics Column */}
-                    <TableCell className="w-24 min-w-[80px] max-w-[100px]">{t("Statistics")}</TableCell>
-                    <TableCell className="w-20 text-right">{t("ActionsTbl")}</TableCell>
-                  </tr>
-                </TableHeader>
-                <ProductTable
-                  lang={lang}
-                  isCheck={isCheck}
-                  products={data?.products}
-                  setIsCheck={setIsCheck}
-                />
-              </Table>
-              <TableFooter>
-                <Pagination
-                  totalResults={data?.totalDoc}
-                  resultsPerPage={limitData}
-                  onChange={handleChangePage}
-                  label="Product Page Navigation"
-                />
-              </TableFooter>
-            </TableContainer>
-          </div>
-
-          {/* Phase 7: Mobile Card View - Visible on Mobile Only */}
-          <div className="lg:hidden">
-            <div className="mb-4">
-              {/* Mobile Select All */}
-              <div className="flex items-center justify-between mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <CheckBox
-                  type="checkbox"
-                  name="selectAll"
-                  id="selectAll"
-                  isChecked={isCheckAll}
-                  handleClick={handleSelectAll}
-                />
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {isCheck.length > 0 && `${isCheck.length} selected`}
-                </span>
-              </div>
-
-              {/* Product Cards */}
-              <div className="space-y-4">
-                {data?.products?.map((product) => (
-                  <ProductCardMobile
-                    key={product._id}
-                    product={product}
+          {/* Phase 7: Desktop Table View - Only render on desktop */}
+          {!isMobile && (
+            <div className="block">
+              <TableContainer className="mb-8 rounded-b-lg overflow-x-auto">
+                <Table className="min-w-full table-fixed">
+                  <TableHeader>
+                    <tr>
+                      <TableCell className="w-12">
+                        <CheckBox
+                          type="checkbox"
+                          name="selectAll"
+                          id="selectAll"
+                          isChecked={isCheckAll}
+                          handleClick={handleSelectAll}
+                        />
+                      </TableCell>
+                      <TableCell className="w-16">{t("Thumbnail")}</TableCell>
+                      <TableCell className="w-48 min-w-[180px] max-w-[200px]">
+                        <button
+                          type="button"
+                          onClick={() => handleSort('name')}
+                          className="flex items-center gap-1 hover:text-emerald-600"
+                        >
+                          {t("ProductNameTbl")}
+                          {getSortIcon('name')}
+                        </button>
+                      </TableCell>
+                      <TableCell className="w-32 min-w-[100px] max-w-[120px]">
+                        <button
+                          type="button"
+                          onClick={() => handleSort('sku')}
+                          className="flex items-center gap-1 hover:text-emerald-600"
+                        >
+                          {t("SKU")}
+                          {getSortIcon('sku')}
+                        </button>
+                      </TableCell>
+                      <TableCell className="w-24 min-w-[80px] max-w-[100px]">
+                        <button
+                          type="button"
+                          onClick={() => handleSort('stock')}
+                          className="flex items-center gap-1 hover:text-emerald-600"
+                        >
+                          {t("StockTbl")}
+                          {getSortIcon('stock')}
+                        </button>
+                      </TableCell>
+                      <TableCell className="w-24 min-w-[80px] max-w-[100px]">
+                        <button
+                          type="button"
+                          onClick={() => handleSort('price')}
+                          className="flex items-center gap-1 hover:text-emerald-600"
+                        >
+                          {t("PriceTbl")}
+                          {getSortIcon('price')}
+                        </button>
+                      </TableCell>
+                      <TableCell className="w-40 min-w-[120px] max-w-[150px]">{t("CategoryTbl")}</TableCell>
+                      <TableCell className="w-40 min-w-[120px] max-w-[150px]">{t("Tags")}</TableCell>
+                      <TableCell className="w-16 text-center">{t("Featured")}</TableCell>
+                      <TableCell className="w-40 min-w-[140px] max-w-[160px]">
+                        <button
+                          type="button"
+                          onClick={() => handleSort('date')}
+                          className="flex items-center gap-1 hover:text-emerald-600"
+                        >
+                          {t("Date")}
+                          {getSortIcon('date')}
+                        </button>
+                      </TableCell>
+                      <TableCell className="w-32 min-w-[100px] max-w-[120px]">
+                        <button
+                          type="button"
+                          onClick={() => handleSort('brand')}
+                          className="flex items-center gap-1 hover:text-emerald-600"
+                        >
+                          {t("Brands")}
+                          {getSortIcon('brand')}
+                        </button>
+                      </TableCell>
+                      <TableCell className="w-32 min-w-[100px] max-w-[120px]">{t("Vendor")}</TableCell>
+                      {/* Phase 6: Statistics Column */}
+                      <TableCell className="w-24 min-w-[80px] max-w-[100px]">{t("Statistics")}</TableCell>
+                      <TableCell className="w-20 text-right">{t("ActionsTbl")}</TableCell>
+                    </tr>
+                  </TableHeader>
+                  <ProductTable
+                    lang={lang}
                     isCheck={isCheck}
+                    products={data?.products}
                     setIsCheck={setIsCheck}
-                    onEdit={handleEdit}
-                    onQuickEdit={handleQuickEdit}
-                    onView={handleView}
-                    onDuplicate={handleDuplicate}
-                    onTrash={handleTrash}
                   />
-                ))}
-              </div>
+                </Table>
+                <TableFooter>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      Showing {((localCurrentPage - 1) * limitData) + 1}-{Math.min(localCurrentPage * limitData, data?.totalDoc || 0)} of {data?.totalDoc || 0} items
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleLocalPageChange(localCurrentPage - 1)}
+                        disabled={localCurrentPage === 1}
+                        className="px-3 py-1 rounded border disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        Previous
+                      </button>
+                      <span className="text-sm">
+                        Page {localCurrentPage} of {Math.ceil((data?.totalDoc || 0) / limitData)}
+                      </span>
+                      <button
+                        onClick={() => handleLocalPageChange(localCurrentPage + 1)}
+                        disabled={localCurrentPage >= Math.ceil((data?.totalDoc || 0) / limitData)}
+                        className="px-3 py-1 rounded border disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                </TableFooter>
+              </TableContainer>
             </div>
+          )}
 
-            {/* Mobile Pagination */}
-            <div className="flex justify-center mt-6">
-              <Pagination
-                totalResults={data?.totalDoc}
-                resultsPerPage={limitData}
-                onChange={handleChangePage}
-                label="Product Page Navigation"
-              />
-            </div>
-          </div>
+          {/* Phase 7: Mobile Card View - Only render on mobile */}
+          {isMobile && (
+            <>
+              <div className="mb-4">
+                {/* Mobile Select All */}
+                <div className="flex items-center justify-between mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <CheckBox
+                    type="checkbox"
+                    name="selectAll"
+                    id="selectAll"
+                    isChecked={isCheckAll}
+                    handleClick={handleSelectAll}
+                  />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {isCheck.length > 0 && `${isCheck.length} selected`}
+                  </span>
+                </div>
+
+                {/* Product Cards */}
+                <div className="space-y-4">
+                  {data?.products?.map((product) => (
+                    <ProductCardMobile
+                      key={product._id}
+                      product={product}
+                      isCheck={isCheck}
+                      setIsCheck={setIsCheck}
+                      onEdit={handleEdit}
+                      onQuickEdit={handleQuickEdit}
+                      onView={handleView}
+                      onDuplicate={handleDuplicate}
+                      onTrash={handleTrash}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Mobile Pagination */}
+              <div className="flex flex-col items-center gap-2 mt-6">
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  Showing {((localCurrentPage - 1) * limitData) + 1}-{Math.min(localCurrentPage * limitData, data?.totalDoc || 0)} of {data?.totalDoc || 0} items
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleLocalPageChange(localCurrentPage - 1)}
+                    disabled={localCurrentPage === 1}
+                    className="px-3 py-1 rounded border disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-sm">
+                    Page {localCurrentPage} of {Math.ceil((data?.totalDoc || 0) / limitData)}
+                  </span>
+                  <button
+                    onClick={() => handleLocalPageChange(localCurrentPage + 1)}
+                    disabled={localCurrentPage >= Math.ceil((data?.totalDoc || 0) / limitData)}
+                    className="px-3 py-1 rounded border disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </>
       ) : (
         <NotFound title="Product" />

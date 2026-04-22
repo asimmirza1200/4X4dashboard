@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import SettingServices from "@/services/SettingServices";
 import { useDispatch, useSelector } from "react-redux";
 import { addSetting, removeSetting } from "@/reduxStore/slice/settingSlice";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useCallback } from "react";
 import { SidebarContext } from "@/context/SidebarContext";
 
 const useUtilsFunction = () => {
@@ -62,11 +62,11 @@ const useUtilsFunction = () => {
   };
 
   //for translation
-  const showingTranslateValue = (data) => {
+  const showingTranslateValue = useCallback((data) => {
     return data !== undefined && Object?.keys(data).includes(lang)
       ? data[lang]
       : data?.en;
-  };
+  }, [lang]);
 
   const showingImage = (data) => {
     return data !== undefined && data;

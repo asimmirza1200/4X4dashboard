@@ -5,7 +5,7 @@ import Cookies from "js-cookie";
 
 const instance = axios.create({
   baseURL: `${import.meta.env.VITE_APP_API_BASE_URL}`,
-  timeout: 50000,
+  timeout: 120000, // Increased to 120 seconds to prevent timeout errors
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",

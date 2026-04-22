@@ -282,7 +282,8 @@ export const cmsFormConfig = {
     defaultContent: {
       heroSection: {
         title: '',
-        subtitle: ''
+        subtitle: '',
+        backgroundImage: ''
       },
       contactInfo: {
         address: '',
@@ -307,7 +308,8 @@ export const cmsFormConfig = {
         title: 'Hero Section',
         fields: [
           { key: 'title', label: 'Title', type: 'text', placeholder: 'Enter contact hero title' },
-          { key: 'subtitle', label: 'Subtitle', type: 'textarea', placeholder: 'Enter contact hero subtitle', rows: 3 }
+          { key: 'subtitle', label: 'Subtitle', type: 'textarea', placeholder: 'Enter contact hero subtitle', rows: 3 },
+          { key: 'backgroundImage', label: 'Background Image', type: 'image' }
         ]
       },
       {

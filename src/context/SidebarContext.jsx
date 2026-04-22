@@ -62,7 +62,10 @@ export const SidebarProvider = ({ children }) => {
   };
 
   const handleChangePage = (p) => {
-    setCurrentPage(p);
+    // Only update if the page is different to prevent duplicate calls
+    if (p !== currentPage) {
+      setCurrentPage(p);
+    }
   };
 
   const handleSubmitForAll = (e) => {
