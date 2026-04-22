@@ -119,7 +119,6 @@ const Uploader = ({ setImageUrl, imageUrl, product, folder }) => {
 
         const baseURL = import.meta.env.VITE_APP_API_BASE_URL || 'http://localhost:5055/api';
        console.log("baseURL",baseURL)
-       console.log("serverURL",serverURL) 
         axios({
           // backend: app.use("/api/upload", uploadRoutes);
           // if baseURL already includes /api, just append /upload/images
