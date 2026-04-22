@@ -118,8 +118,6 @@ const Uploader = ({ setImageUrl, imageUrl, product, folder }) => {
         }
 
         const baseURL = import.meta.env.VITE_APP_API_BASE_URL || 'http://localhost:5055/api';
-// Extract server URL for images (remove /api suffix if present)
-const serverURL = baseURL.endsWith('/api') ? baseURL.slice(0, -4) : baseURL;
        console.log("baseURL",baseURL)
        console.log("serverURL",serverURL) 
         axios({
@@ -150,7 +148,7 @@ const serverURL = baseURL.endsWith('/api') ? baseURL.slice(0, -4) : baseURL;
                 // Construct full URL if it's a relative path
                 const fullUrl = uploadedUrl.startsWith('http') 
                   ? uploadedUrl 
-                  : `${serverURL}${uploadedUrl}`;
+                  : `${baseURL}/website${uploadedUrl}`;
                   console.log("fullUrl",fullUrl)
                 setImageUrl((imgUrl) => [...(imgUrl || []), fullUrl]);
               }
@@ -161,7 +159,7 @@ const serverURL = baseURL.endsWith('/api') ? baseURL.slice(0, -4) : baseURL;
                 // Construct full URL if it's a relative path
                 const fullUrl = uploadedUrl.startsWith('http') 
                   ? uploadedUrl 
-                  : `${serverURL}${uploadedUrl}`;
+                  : `${baseURL}/website${uploadedUrl}`;
                 setImageUrl(fullUrl);
               }
             }
