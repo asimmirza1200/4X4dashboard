@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardBody, Button, Input, Label } from '@windmill/react-ui';
 import { FiPlus, FiTrash2, FiEdit2, FiCheck, FiX } from 'react-icons/fi';
+import CMSImageUploader from '@/components/CMSImageUploader';
 
 const DynamicFeaturesManager = ({ features = [], onChange }) => {
   const [editingIndex, setEditingIndex] = useState(null);
@@ -8,6 +9,7 @@ const DynamicFeaturesManager = ({ features = [], onChange }) => {
 
   const handleAddFeature = () => {
     const newFeature = {
+      icon: '',
       title: '',
       subtitle: '',
     };
@@ -56,7 +58,7 @@ const DynamicFeaturesManager = ({ features = [], onChange }) => {
 
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 ">
       <div className="flex justify-between items-center">
         <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100">
           Feature Items ({features.length})
@@ -76,12 +78,21 @@ const DynamicFeaturesManager = ({ features = [], onChange }) => {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ">
           {features.map((feature, index) => (
             <Card key={index} className="relative">
               <CardBody>
                 {editingIndex === index ? (
                   <div className="space-y-3">
+                    <div>
+                      <Label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Icon
+                      </Label>
+                      <CMSImageUploader
+                        imageUrl={editingFeature.icon}
+                        setImageUrl={(url) => handleFeatureChange('icon', url)}
+                      />
+                    </div>
                     <div>
                       <Label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Feature Title
@@ -126,7 +137,14 @@ const DynamicFeaturesManager = ({ features = [], onChange }) => {
                 ) : (
                   <div>
                     <div className="flex justify-between items-start mb-2">
-                      <div className="flex items-center">
+                      <div className="flex items-center gap-3">
+                        {feature.icon && (
+                          <img
+                            src={feature.icon}
+                            alt={feature.title || 'Feature icon'}
+                            className="h-10 w-10 object-contain"
+                          />
+                        )}
                         <div>
                           <h5 className="font-medium text-gray-900 dark:text-gray-100">
                             {feature.title || 'Untitled Feature'}

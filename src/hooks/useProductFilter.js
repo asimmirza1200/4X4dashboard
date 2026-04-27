@@ -257,8 +257,17 @@ const useProductFilter = () => {
             return;
           }
 
+          // Validate brand images
+          const productsWithoutBrandImage = text.filter(item => item.brand && !item.brand.image);
+          if (productsWithoutBrandImage.length > 0) {
+            notifyError(`❌ Brand image is missing for ${productsWithoutBrandImage.length} product(s). Please add brand images to your products and try again.`);
+            setIsDisable(false);
+            return;
+          }
+
           console.log("Found vendors in file:", uniqueVendorNames);
           console.log("Validated postal codes:", vendorPostalCodes);
+          console.log("Validated brand images: All products have brand images");
           notifySuccess(`✅ Found ${uniqueVendorNames.length} vendor(s) in file: ${uniqueVendorNames.join(", ")}`);
 
           // Process all products to handle image uploads
@@ -268,6 +277,9 @@ const useProductFilter = () => {
               
               // Process images for this product
               const processedImages = await processImportImages(value.image || []);
+              
+              // Process brand image if provided
+              const processedBrandImage = value.brand?.image ? await processImportImages([value.brand.image]) : [];
               
               return {
                 categories: value.categories,
@@ -286,7 +298,10 @@ const useProductFilter = () => {
                 category: value.category ,
                 stock: value.stock,
                 description: value.description,
-                brand: value.brand || "",
+                brand: value.brand ? {
+                  ...value.brand,
+                  image: processedBrandImage.length > 0 ? processedBrandImage[0] : ""
+                } : "",
                 vendor: value.vendor || { name: "", postalCode: "" },
                 weight: value.weight || "",
                 length: value.length || "",
@@ -347,8 +362,17 @@ const useProductFilter = () => {
             return;
           }
 
+          // Validate brand images
+          const productsWithoutBrandImage = json.filter(item => item?.Brand && !item?.["Brand Image"] && !item?.brandImage);
+          if (productsWithoutBrandImage.length > 0) {
+            notifyError(`❌ Brand image is missing for ${productsWithoutBrandImage.length} product(s). Please add "Brand Image" column to your CSV and try again.`);
+            setIsDisable(false);
+            return;
+          }
+
           console.log("Found vendors in CSV:", uniqueVendorNames);
           console.log("Validated postal codes:", vendorPostalCodes);
+          console.log("Validated brand images: All products with brands have brand images");
           notifySuccess(`✅ Found ${uniqueVendorNames.length} vendor(s) in CSV: ${uniqueVendorNames.join(", ")}`);
           
           // Show processing message now that actual processing is starting
@@ -394,6 +418,10 @@ const useProductFilter = () => {
             const processedImages = await processImportImages(imageUrls);
             console.log("CSV - Processed images:", processedImages);
             
+            // Process brand image if provided
+            const brandImageUrl = value?.["Brand Image"] || value?.brandImage || "";
+            const processedBrandImage = brandImageUrl ? await processImportImages([brandImageUrl]) : [];
+            
             return {
               image: processedImages,
               tag: value?.["Product Tag"] || value.Tags || value.tags ? (value?.["Product Tag"] || value.Tags || value.tags).split("|").map(tag => tag.trim()).filter(tag => tag) : [],
@@ -438,7 +466,10 @@ const useProductFilter = () => {
               internalSku: value?.["Internal SKU"] || "",
               
               // Tags & Classification
-              brand: value?.Brand ? { name: value.Brand.trim() } : { name: "" },
+              brand: value?.Brand ? { 
+                name: value.Brand.trim(),
+                image: processedBrandImage.length > 0 ? processedBrandImage[0] : ""
+              } : { name: "", image: "" },
               vendor: value?.Vendor || value?.vendor || value?.["Vendor Name"] ? { 
                 name: (value?.Vendor || value?.vendor || value?.["Vendor Name"]).trim(),
                 postalCode: (value?.["Vendor Postal Code"] || value?.["Vendor Postcode"] || value?.["Vendor Zip"] || value?.vendorPostalCode || "").trim()

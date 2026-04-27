@@ -29,8 +29,8 @@ const CBSGServices = {
   },
 
   // User Management
-  getPendingUsers: async ({ page = 1, limit = 20, search = "" }) => {
-    let queryString = `/users/pending?page=${page}&limit=${limit}`;
+  getUsers: async ({ page = 1, limit = 20, search = "" }) => {
+    let queryString = `/users/?page=${page}&limit=${limit}`;
     if (search) queryString += `&search=${encodeURIComponent(search)}`;
     return requests.get(queryString);
   },

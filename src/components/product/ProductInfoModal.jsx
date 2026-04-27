@@ -228,7 +228,7 @@ const ProductInfoModal = ({ product, isOpen, onClose }) => {
                   
                   <div className="flex justify-between items-start">
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Description:</span>
-                    <span className="text-sm text-gray-900 dark:text-gray-100 text-right max-w-xs">{productDescription}</span>
+                    <span className="text-sm text-gray-900 dark:text-gray-100 text-right max-w-xs max-h-40 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">{productDescription}</span>
                   </div>
                   
                   <div className="flex justify-between items-start">

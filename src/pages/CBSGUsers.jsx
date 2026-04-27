@@ -39,7 +39,7 @@ const CBSGUsers = () => {
 
   // Fetch pending users
   const { data, loading, error, time } = useAsync(() =>
-    CBSGServices.getPendingUsers({
+    CBSGServices.getUsers({
       page: currentPage,
       limit: limitData,
       search: searchText || "",
@@ -159,7 +159,8 @@ const CBSGUsers = () => {
                                 size="small"
                                 onClick={() => handleApproveUser(user._id, true)}
                               >
-                                <FiCheck className="w-4 h-4 text-green-600" />
+                                <FiCheck className="w-4 h-4 text-green-600 mr-1" />
+                                <span className="text-sm">Approve</span>
                               </Button>
                             )}
                             {user.approved && (
@@ -168,7 +169,8 @@ const CBSGUsers = () => {
                                 size="small"
                                 onClick={() => handleApproveUser(user._id, false)}
                               >
-                                <FiX className="w-4 h-4 text-red-600" />
+                                <FiX className="w-4 h-4 text-red-600 mr-1" />
+                                <span className="text-sm">Reject</span>
                               </Button>
                             )}
                           </div>

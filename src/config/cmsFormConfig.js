@@ -42,19 +42,23 @@ export const cmsFormConfig = {
         title: 'Our Services',
         items: [
           {
+            icon: '',
             title: 'Free Shipping',
             subtitle: 'On orders over $100',
           },
           {
+            icon: '',
             title: '24/7 Support',
             subtitle: 'Dedicated support',
           },
           {
+            icon: '',
             title: 'Secure Payment',
             subtitle: '100% secure payment',
 
           },
           {
+            icon: '',
             title: 'Hot Offers',
             subtitle: 'Discounts up to 50%',
           }
@@ -76,7 +80,8 @@ export const cmsFormConfig = {
 ],
         },
         logo: {
-          mainText: '4X4',
+          image: '/logo.png',
+          alt: '4X4 Logo',
           slogan: 'Auto parts for Cars, trucks and motorcycles'
         },
        navigation: {
@@ -161,7 +166,11 @@ export const cmsFormConfig = {
         title: 'Features/Services',
         fields: [
           { key: 'title', label: 'Section Title', type: 'text', placeholder: 'Our Services' },
-          { key: 'items', label: 'Feature Items', type: 'dynamic-features', fullWidth: true }
+          { key: 'items', label: 'Feature Items', type: 'dynamic-features', fullWidth: true, fields: [
+            { key: 'icon', label: 'Icon', type: 'image', placeholder: 'Upload icon' },
+            { key: 'title', label: 'Title', type: 'text', placeholder: 'Feature title' },
+            { key: 'subtitle', label: 'Subtitle', type: 'text', placeholder: 'Feature subtitle' }
+          ]}
         ]
       },
       {
@@ -225,7 +234,8 @@ export const cmsFormConfig = {
           { key: 'topbar.callus.phone', label: 'Phone Number', type: 'text', placeholder: '(800) 060-0730' },
           { key: 'topbar.leftLinks', label: 'Top Bar Left Links ',  type: 'dynamic-links', fullWidth: true },
           { key: 'topbar.rightLinks', label: 'Top Bar Right Links ',  type: 'dynamic-links', fullWidth: true },
-          { key: 'logo.mainText', label: 'Logo Main Text', type: 'text', placeholder: '4X4' },
+          { key: 'logo.image', label: 'Logo Image', type: 'image', placeholder: 'Upload logo image' },
+          { key: 'logo.alt', label: 'Logo Alt Text', type: 'text', placeholder: '4X4 Logo' },
           { key: 'logo.slogan', label: 'Logo Slogan', type: 'text', placeholder: 'Auto parts for Cars, trucks and motorcycles' },
          { 
   key: 'navigation.items', 

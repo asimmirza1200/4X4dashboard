@@ -133,7 +133,7 @@ const ProductDetails = () => {
                   {t("Quantity")}: {data?.stock}
                 </span>
               </div>
-              <p className="text-sm leading-6 text-gray-500 dark:text-gray-400 md:leading-7">
+              <p className="text-sm leading-6 text-gray-500 dark:text-gray-400 md:leading-7 max-h-40 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
                 {showingTranslateValue(data?.description)}
               </p>
               <div className="flex flex-col mt-4">
@@ -144,14 +144,22 @@ const ProductDetails = () => {
                   {showingTranslateValue(data?.category?.name)}
                 </p>
                 <div className="flex flex-row">
-                  {JSON.parse(data?.tag).map((t, i) => (
-                    <span
-                      key={i + 1}
-                      className="bg-gray-200 mr-2 border-0 text-gray-500 rounded-full inline-flex items-center justify-center px-2 py-1 text-xs font-semibold font-serif mt-2 dark:bg-gray-700 dark:text-gray-300"
-                    >
-                      {t}
-                    </span>
-                  ))}
+                  {(() => {
+                    try {
+                      const tags = data?.tag ? (typeof data.tag === 'string' ? JSON.parse(data.tag) : data.tag) : [];
+                      return Array.isArray(tags) ? tags.map((t, i) => (
+                        <span
+                          key={i + 1}
+                          className="bg-gray-200 mr-2 border-0 text-gray-500 rounded-full inline-flex items-center justify-center px-2 py-1 text-xs font-semibold font-serif mt-2 dark:bg-gray-700 dark:text-gray-300"
+                        >
+                          {t}
+                        </span>
+                      )) : null;
+                    } catch (e) {
+                      console.error('Error parsing tags:', e);
+                      return null;
+                    }
+                  })()}
                 </div>
               </div>
               <div className="mt-6">
