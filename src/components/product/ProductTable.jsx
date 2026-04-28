@@ -6,6 +6,7 @@ import {
   TableRow,
 } from "@windmill/react-ui";
 import { t } from "i18next";
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { FiZoomIn, FiStar } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import dayjs from "dayjs";
@@ -218,12 +219,12 @@ const ProductTable = ({ products, isCheck, setIsCheck }) => {
                       onClick={() => handleView(product)}
                       className="p-1 rounded  transition-colors"
                     >
-                      {/* <DotLottieReact
+                      <DotLottieReact
                         src="https://lottie.host/fb33c828-a199-44c1-8201-6399c60dde8b/ovXlMY3Ntd.lottie"
                         loop
                         autoplay
                         className="w-8 h-8 cursor-pointer"
-                      /> */}
+                      />
                     </button>
                   </div>
                 </div>
