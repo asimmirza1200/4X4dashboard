@@ -430,10 +430,6 @@ const ProductInfoModal = ({ product, isOpen, onClose }) => {
                     <span className="text-sm text-gray-900 dark:text-gray-100">{getCategoryName(product.categories)}</span>
                   </div>
                   
-                  <div className="flex justify-between items-start">
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Default Category:</span>
-                    <span className="text-sm text-gray-900 dark:text-gray-100">{getCategoryName(product.defaultCategory)}</span>
-                  </div>
                   
                   <div className="flex justify-between items-start">
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Vendor:</span>
